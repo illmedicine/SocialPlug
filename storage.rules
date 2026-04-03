@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Screenshots: readable by authenticated users, writable by service account (agent)
+    match /screenshots/{vmId}/{sessionId}/{filename} {
+      allow read: if request.auth != null;
+      // Service account writes bypass rules, so no explicit write rule needed
+    }
+  }
+}

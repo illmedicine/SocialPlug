@@ -1,0 +1,15 @@
+[Unit]
+Description=Echo Vue VM Agent
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/echo-vue-agent
+ExecStart=/home/ubuntu/echo-vue-agent/venv/bin/python agent.py --vm-id VM_ID_HERE --bucket YOUR_PROJECT.appspot.com
+Restart=always
+RestartSec=10
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=multi-user.target
