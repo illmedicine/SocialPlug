@@ -108,7 +108,24 @@ async def run_session(browser, db, vm_id, session_doc):
                     : origQuery(parameters);
         """)
         page = await context.new_page()
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+
+        # Navigate with retry logic — headed Chrome on small VMs can be slow
+        last_err = None
+        for attempt in range(3):
+            try:
+                await page.goto(url, wait_until="commit", timeout=60000)
+                print(f"[SESSION {session_id}] Page loaded (attempt {attempt + 1})")
+                last_err = None
+                break
+            except Exception as e:
+                last_err = e
+                print(f"[SESSION {session_id}] Navigation attempt {attempt + 1} failed: {e}")
+                await asyncio.sleep(3)
+        if last_err:
+            raise last_err
+
+        # Give page a moment to render
+        await asyncio.sleep(5)
 
         # Dismiss YouTube consent/bot dialogs if present
         try:
