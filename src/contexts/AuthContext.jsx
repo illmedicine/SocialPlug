@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import {
@@ -51,11 +50,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Handle redirect result on load
-  useEffect(() => {
-    getRedirectResult(auth).catch(() => {});
-  }, []);
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -90,7 +84,7 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const signIn = () => signInWithRedirect(auth, googleProvider);
+  const signIn = () => signInWithPopup(auth, googleProvider);
   const signOut = () => firebaseSignOut(auth);
 
   return (
