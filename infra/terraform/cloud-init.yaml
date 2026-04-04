@@ -1,0 +1,92 @@
+#cloud-config
+# ══════════════════════════════════════════════════════════════════════════════
+# SocialPlug VM Agent — Cloud-Init (runs on first boot)
+# by Illy Robotic Instruments
+#
+# This script is injected into each VM via Terraform user_data.
+# It installs all dependencies, sets up the agent, and starts the systemd
+# service — fully automated, no SSH required.
+# ══════════════════════════════════════════════════════════════════════════════
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - git
+  - libnss3
+  - libatk1.0-0
+  - libatk-bridge2.0-0
+  - libcups2
+  - libdrm2
+  - libxkbcommon0
+  - libxcomposite1
+  - libxdamage1
+  - libxrandr2
+  - libgbm1
+  - libpango-1.0-0
+  - libcairo2
+  - libasound2
+  - libxshmfence1
+  - fonts-liberation
+  - xdg-utils
+
+write_files:
+  - path: /etc/systemd/system/socialplug-agent.service
+    content: |
+      [Unit]
+      Description=SocialPlug VM Agent — by Illy Robotic Instruments
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=ubuntu
+      WorkingDirectory=/home/ubuntu/socialplug-agent
+      ExecStart=/home/ubuntu/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --bucket ${firebase_bucket}
+      Restart=always
+      RestartSec=10
+      Environment=DISPLAY=:0
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Clone the repo to get the agent code
+  - |
+    sudo -u ubuntu bash -c '
+      set -e
+      cd /home/ubuntu
+
+      # Clone repo
+      git clone https://github.com/illmedicine/SocialPlug.git || true
+
+      # Set up agent directory
+      mkdir -p socialplug-agent
+      cp SocialPlug/vm-agent/agent.py socialplug-agent/
+      cp SocialPlug/vm-agent/requirements.txt socialplug-agent/
+      cd socialplug-agent
+
+      # Python venv + deps
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+      # Pre-install Playwright Chromium
+      python -m playwright install chromium
+      python -m playwright install-deps chromium
+    '
+
+  # Enable and start the agent service
+  - systemctl daemon-reload
+  - systemctl enable socialplug-agent
+  - systemctl start socialplug-agent
+
+  # Idle-prevention cron (keeps CPU > 20% to avoid Oracle reclamation)
+  - |
+    echo '*/10 * * * * dd if=/dev/urandom bs=512K count=20 of=/dev/null 2>/dev/null' | crontab -u ubuntu -
+
+final_message: "SocialPlug agent is running on ${vm_id}!"

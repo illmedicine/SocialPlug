@@ -1,0 +1,12 @@
+# Terraform state (contains sensitive data)
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# User-specific variables (contains OCIDs and paths)
+terraform.tfvars
+
+# Service account keys
+service-account.json
+*.pem

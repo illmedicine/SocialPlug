@@ -150,14 +150,14 @@ SocialPlug/
 │   │   └── useFirestore.js      # Firestore CRUD hooks
 │   ├── components/
 │   │   ├── DashboardLayout.jsx  # Sidebar + main layout
-│   │   ├── AddEnvironmentModal.jsx
-│   │   ├── AddVMModal.jsx
+│   │   ├── PlatformLogos.jsx    # Social media SVG logos
 │   │   └── ScreenshotViewer.jsx # Full-screen live viewer
 │   └── pages/
 │       ├── LoginPage.jsx
-│       ├── EnvironmentPage.jsx  # VM room grid
+│       ├── DashboardPage.jsx    # VM dashboard with on/off toggles
 │       ├── VMDetailPage.jsx     # Session management + screenshots
 │       ├── CamerasPage.jsx      # All live sessions grid
+│       ├── PlatformPage.jsx     # Per-platform session view
 │       └── SettingsPage.jsx     # User profile + config
 ├── vm-agent/
 │   ├── agent.py                 # Python VM agent

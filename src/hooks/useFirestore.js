@@ -36,20 +36,6 @@ export function useVMs() {
     return unsubscribe;
   }, [user]);
 
-  const addVM = async (data) => {
-    return addDoc(collection(db, 'vms'), {
-      ...data,
-      userId: user.uid,
-      status: 'offline',
-      activeSessions: 0,
-      publicIP: data.publicIP || '',
-      provider: data.provider || 'oracle',
-      agentKey: crypto.randomUUID(),
-      createdAt: serverTimestamp(),
-      lastSeen: null,
-    });
-  };
-
   const updateVM = async (id, data) => {
     return updateDoc(doc(db, 'vms', id), data);
   };
@@ -58,7 +44,7 @@ export function useVMs() {
     return deleteDoc(doc(db, 'vms', id));
   };
 
-  return { vms, loading, addVM, updateVM, deleteVM };
+  return { vms, loading, updateVM, deleteVM };
 }
 
 /**

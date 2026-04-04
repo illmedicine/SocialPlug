@@ -1,0 +1,25 @@
+# ┌─────────────────────────────────────────────────────┐
+# │  Copy this file to terraform.tfvars and fill in    │
+# │  your Oracle Cloud account details.                │
+# └─────────────────────────────────────────────────────┘
+
+# Required — find these in OCI Console → Profile → Tenancy
+tenancy_ocid     = "ocid1.tenancy.oc1..xxxxxxxxxxxx"
+user_ocid        = "ocid1.user.oc1..xxxxxxxxxxxx"
+fingerprint      = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+private_key_path = "~/.oci/oci_api_key.pem"
+
+# Your home region (must use home region for Always Free resources)
+region = "us-ashburn-1"
+
+# Compartment to create VMs in (root compartment = tenancy OCID)
+compartment_ocid = "ocid1.compartment.oc1..xxxxxxxxxxxx"
+
+# Path to your SSH public key (used to SSH into VMs)
+ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# Number of VMs (1-4, default 4 — max for Always Free tier)
+vm_count = 4
+
+# Firebase Storage bucket (don't change unless using a different project)
+firebase_bucket = "livepay-petition.firebasestorage.app"
