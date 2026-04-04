@@ -94,35 +94,51 @@ data "oci_core_images" "ubuntu_arm" {
   sort_order               = "DESC"
 }
 
-# ── Networking ────────────────────────────────────────────────────────────────
+# ── Networking (reuse existing VCN) ────────────────────────────────────────────
 
-resource "oci_core_vcn" "socialplug_vcn" {
+# Look up the first existing VCN in the compartment
+data "oci_core_vcns" "existing" {
   compartment_id = var.compartment_ocid
-  display_name   = "socialplug-vcn"
-  cidr_blocks    = ["10.0.0.0/16"]
+}
+
+locals {
+  vcn_id = data.oci_core_vcns.existing.virtual_networks[0].id
+}
+
+# Look up existing internet gateways in the VCN
+data "oci_core_internet_gateways" "existing" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = local.vcn_id
+}
+
+locals {
+  # Use existing IGW if available, otherwise create one
+  has_igw = length(data.oci_core_internet_gateways.existing.gateways) > 0
+  igw_id  = local.has_igw ? data.oci_core_internet_gateways.existing.gateways[0].id : oci_core_internet_gateway.igw[0].id
 }
 
 resource "oci_core_internet_gateway" "igw" {
+  count          = local.has_igw ? 0 : 1
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.socialplug_vcn.id
+  vcn_id         = local.vcn_id
   display_name   = "socialplug-igw"
   enabled        = true
 }
 
 resource "oci_core_route_table" "public_rt" {
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.socialplug_vcn.id
+  vcn_id         = local.vcn_id
   display_name   = "socialplug-public-rt"
 
   route_rules {
     destination       = "0.0.0.0/0"
-    network_entity_id = oci_core_internet_gateway.igw.id
+    network_entity_id = local.igw_id
   }
 }
 
 resource "oci_core_security_list" "public_sl" {
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.socialplug_vcn.id
+  vcn_id         = local.vcn_id
   display_name   = "socialplug-public-sl"
 
   # Allow all egress
@@ -164,9 +180,9 @@ resource "oci_core_security_list" "public_sl" {
 
 resource "oci_core_subnet" "public_subnet" {
   compartment_id    = var.compartment_ocid
-  vcn_id            = oci_core_vcn.socialplug_vcn.id
+  vcn_id            = local.vcn_id
   display_name      = "socialplug-public-subnet"
-  cidr_block        = "10.0.0.0/24"
+  cidr_block        = "10.0.2.0/24"
   route_table_id    = oci_core_route_table.public_rt.id
   security_list_ids = [oci_core_security_list.public_sl.id]
 }
@@ -175,7 +191,7 @@ resource "oci_core_subnet" "public_subnet" {
 
 resource "oci_core_instance" "socialplug_vm" {
   count               = var.vm_count
-  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
+  availability_domain = data.oci_identity_availability_domains.ads.availability_domains[count.index % length(data.oci_identity_availability_domains.ads.availability_domains)].name
   compartment_id      = var.compartment_ocid
   display_name        = "socialplug-vm-${count.index + 1}"
 
@@ -188,7 +204,7 @@ resource "oci_core_instance" "socialplug_vm" {
   source_details {
     source_id   = data.oci_core_images.ubuntu_arm.images[0].id
     source_type = "image"
-    boot_volume_size_in_gbs = 47
+    boot_volume_size_in_gbs = 50
   }
 
   create_vnic_details {
