@@ -73,9 +73,15 @@ async def run_session(browser, db, vm_id, session_doc):
             viewport={"width": 1280, "height": 720},
             user_agent=(
                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
             ),
+            locale="en-US",
+            timezone_id="America/New_York",
         )
+        # Remove navigator.webdriver flag to avoid bot detection
+        await context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        """)
         page = await context.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
 
@@ -192,6 +198,8 @@ async def agent_loop(vm_id, cred_path):
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--disable-software-rasterizer",
+                "--incognito",
+                "--disable-blink-features=AutomationControlled",
             ],
         )
         print("[AGENT] Chromium launched — VM is READY")
