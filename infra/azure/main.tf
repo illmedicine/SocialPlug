@@ -45,7 +45,7 @@ variable "ssh_public_key_path" {
 variable "firebase_bucket" {
   description = "Firebase Storage bucket"
   type        = string
-  default     = "livepay-petition.firebasestorage.app"
+  default     = "livepay-petition.appspot.com"
 }
 
 # ── VM Definitions ────────────────────────────────────────────────────────────

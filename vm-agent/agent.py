@@ -98,15 +98,18 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
             if status in ("stopping", "stopped"):
                 break
 
-            screenshot_bytes = await take_screenshot(page)
-            public_url = await upload_screenshot(
-                bucket, vm_id, session_id, screenshot_bytes
-            )
-            session_ref.update({
-                "latestScreenshot": public_url,
-                "screenshotUpdatedAt": firestore.SERVER_TIMESTAMP,
-            })
-            print(f"[SESSION {session_id}] Screenshot → {public_url}")
+            try:
+                screenshot_bytes = await take_screenshot(page)
+                public_url = await upload_screenshot(
+                    bucket, vm_id, session_id, screenshot_bytes
+                )
+                session_ref.update({
+                    "latestScreenshot": public_url,
+                    "screenshotUpdatedAt": firestore.SERVER_TIMESTAMP,
+                })
+                print(f"[SESSION {session_id}] Screenshot → {public_url}")
+            except Exception as e:
+                print(f"[SESSION {session_id}] Screenshot failed (non-fatal): {e}")
 
             await asyncio.sleep(SCREENSHOT_INTERVAL)
 
@@ -258,7 +261,7 @@ def main():
     )
     parser.add_argument(
         "--bucket",
-        default="livepay-petition.firebasestorage.app",
+        default="livepay-petition.appspot.com",
         help="Firebase Storage bucket",
     )
     args = parser.parse_args()

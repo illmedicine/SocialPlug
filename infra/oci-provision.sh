@@ -29,7 +29,7 @@ COMPARTMENT_ID="${OCI_COMPARTMENT_ID:?Set OCI_COMPARTMENT_ID env var}"
 REGION="${OCI_REGION:-us-ashburn-1}"
 SSH_PUB_KEY_FILE="${SSH_PUBLIC_KEY:-$HOME/.ssh/socialplug_key.pub}"
 VM_COUNT=4
-FIREBASE_BUCKET="livepay-petition.firebasestorage.app"
+FIREBASE_BUCKET="livepay-petition.appspot.com"
 
 echo "═══ SocialPlug OCI Provisioning ═══"
 echo "  Compartment: $COMPARTMENT_ID"

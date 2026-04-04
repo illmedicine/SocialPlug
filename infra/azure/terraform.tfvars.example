@@ -4,4 +4,4 @@
 subscription_id     = ""
 location            = "eastus"
 ssh_public_key_path = "C:/Users/demar/.ssh/socialplug_key.pub"
-firebase_bucket     = "livepay-petition.firebasestorage.app"
+firebase_bucket     = "livepay-petition.appspot.com"

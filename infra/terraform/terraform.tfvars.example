@@ -22,4 +22,4 @@ ssh_public_key_path = "~/.ssh/id_rsa.pub"
 vm_count = 4
 
 # Firebase Storage bucket (don't change unless using a different project)
-firebase_bucket = "livepay-petition.firebasestorage.app"
+firebase_bucket = "livepay-petition.appspot.com"

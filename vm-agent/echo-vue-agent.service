@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/socialplug-agent
-ExecStart=/home/ubuntu/socialplug-agent/venv/bin/python agent.py --vm-id VM_ID_HERE --bucket livepay-petition.firebasestorage.app
+ExecStart=/home/ubuntu/socialplug-agent/venv/bin/python agent.py --vm-id VM_ID_HERE --bucket livepay-petition.appspot.com
 Restart=always
 RestartSec=10
 Environment=DISPLAY=:0

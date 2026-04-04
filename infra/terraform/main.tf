@@ -75,7 +75,7 @@ variable "vm_count" {
 variable "firebase_bucket" {
   description = "Firebase Storage bucket for screenshots"
   type        = string
-  default     = "livepay-petition.firebasestorage.app"
+  default     = "livepay-petition.appspot.com"
 }
 
 # ── Data Sources ──────────────────────────────────────────────────────────────

@@ -63,7 +63,7 @@ Wants=network-online.target
 Type=simple
 User=$(whoami)
 WorkingDirectory=$AGENT_DIR
-ExecStart=$AGENT_DIR/venv/bin/python agent.py --vm-id $VM_ID --bucket livepay-petition.firebasestorage.app
+ExecStart=$AGENT_DIR/venv/bin/python agent.py --vm-id $VM_ID --bucket livepay-petition.appspot.com
 Restart=always
 RestartSec=10
 Environment=DISPLAY=:0
