@@ -1,25 +1,21 @@
-import { useState } from 'react';
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useVMs } from '../hooks/useFirestore';
 import {
   Camera,
-  Plus,
   LogOut,
   Settings,
   Server,
   Activity,
 } from 'lucide-react';
 import { PLATFORMS } from './PlatformLogos';
-import AddVMModal from './AddVMModal';
 
 export default function DashboardLayout() {
   const { user, signOut } = useAuth();
-  const { vms, addVM } = useVMs();
+  const { vms, updateVM } = useVMs();
   const { vmId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showAddVM, setShowAddVM] = useState(false);
 
   const onlineCount = vms.filter((v) => v.status === 'online').length;
 
@@ -48,67 +44,48 @@ export default function DashboardLayout() {
             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
               Virtual Machines
             </span>
-            <button
-              onClick={() => setShowAddVM(true)}
-              className="text-gray-400 hover:text-primary-600 transition"
-              title="Add VM"
-            >
-              <Plus size={14} />
-            </button>
           </div>
 
-          {vms.length === 0 ? (
-            <div className="px-2 py-3 text-xs text-gray-400 text-center">
-              No VMs registered.
-              <button
-                onClick={() => setShowAddVM(true)}
-                className="block mx-auto mt-1 text-primary-600 hover:underline text-xs"
-              >
-                + Add your first VM
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-0.5">
-              {vms.map((vm) => {
-                const isActive = vmId === vm.id || location.pathname === `/vm/${vm.id}`;
-                return (
-                  <button
-                    key={vm.id}
-                    onClick={() => navigate(`/vm/${vm.id}`)}
-                    className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition group ${
-                      isActive
-                        ? 'bg-primary-50 text-primary-700 font-medium'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className="relative">
-                      <Server size={15} className={isActive ? 'text-primary-500' : 'text-gray-400'} />
-                      <div
-                        className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
-                          vm.status === 'online' ? 'bg-green-500' : 'bg-gray-300'
-                        }`}
-                      />
+          <div className="space-y-0.5">
+            {vms.map((vm) => {
+              const isActive = vmId === vm.id || location.pathname === `/vm/${vm.id}`;
+              return (
+                <button
+                  key={vm.id}
+                  onClick={() => navigate(`/vm/${vm.id}`)}
+                  className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm transition group ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="relative">
+                    <Server size={15} className={isActive ? 'text-primary-500' : 'text-gray-400'} />
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
+                        vm.status === 'online' ? 'bg-green-500' : vm.status === 'booting' ? 'bg-yellow-400' : 'bg-gray-300'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="truncate">{vm.name}</div>
+                    <div className="text-[10px] text-gray-400 truncate">
+                      {vm.specs || 'Oracle ARM · 1 OCPU · 6 GB'}
                     </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="truncate">{vm.name}</div>
-                      <div className="text-[10px] text-gray-400 font-mono truncate">
-                        {vm.publicIP || 'No IP'}
-                      </div>
-                    </div>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
-                      vm.status === 'online'
-                        ? 'bg-green-100 text-green-700'
-                        : vm.status === 'booting'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}>
-                      {vm.status === 'online' ? 'READY' : vm.status === 'booting' ? 'BOOT' : 'OFF'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                    vm.status === 'online'
+                      ? 'bg-green-100 text-green-700'
+                      : vm.status === 'booting'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {vm.status === 'online' ? 'READY' : vm.status === 'booting' ? 'BOOT' : 'OFF'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* VM Pool Summary */}
           {vms.length > 0 && (
@@ -220,17 +197,6 @@ export default function DashboardLayout() {
         <div className="watermark">SocialPlug</div>
         <div className="watermark-sub">by Illy Robotic Instruments</div>
       </main>
-
-      {/* Add VM Modal */}
-      {showAddVM && (
-        <AddVMModal
-          onClose={() => setShowAddVM(false)}
-          onAdd={async (data) => {
-            await addVM(data);
-            setShowAddVM(false);
-          }}
-        />
-      )}
     </div>
   );
 }

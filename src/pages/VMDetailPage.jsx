@@ -116,8 +116,8 @@ export default function VMDetailPage() {
               {isReady ? <Wifi size={12} /> : isBooting ? <Loader2 size={12} className="animate-spin" /> : <WifiOff size={12} />}
               {isReady ? 'Ready' : isBooting ? 'Booting…' : 'Offline'}
             </span>
-            <span className="font-mono">{vm?.publicIP || 'No IP'}</span>
-            <span>{vm?.provider || 'Oracle Cloud'}</span>
+            <span>{vm?.specs || 'ARM Ampere A1 · 1 OCPU · 6 GB RAM'}</span>
+            <span>Oracle Cloud · Always Free</span>
             {vm?.lastSeen && (
               <span className="text-xs text-gray-400">
                 Heartbeat: {timeAgo(vm.lastSeen)}

@@ -9,11 +9,44 @@ import {
   doc,
   getDoc,
   setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../firebase';
 
 const AuthContext = createContext(null);
+
+const DEFAULT_VMS = [
+  { name: 'VM-1', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
+  { name: 'VM-2', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
+  { name: 'VM-3', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
+  { name: 'VM-4', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
+];
+
+async function seedVMs(uid) {
+  const q = query(collection(db, 'vms'), where('userId', '==', uid));
+  const snap = await getDocs(q);
+  if (snap.size > 0) return; // already seeded
+
+  for (const vm of DEFAULT_VMS) {
+    await addDoc(collection(db, 'vms'), {
+      name: vm.name,
+      specs: vm.specs,
+      userId: uid,
+      provider: 'oracle',
+      status: 'offline',
+      activeSessions: 0,
+      publicIP: '',
+      agentKey: crypto.randomUUID(),
+      createdAt: serverTimestamp(),
+      lastSeen: null,
+    });
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -48,6 +81,8 @@ export function AuthProvider({ children }) {
           await setDoc(profileRef, newProfile);
           setProfile(newProfile);
         }
+        // Auto-seed 4 VMs on first login
+        await seedVMs(firebaseUser.uid);
       } else {
         setUser(null);
         setProfile(null);
