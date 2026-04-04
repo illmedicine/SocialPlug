@@ -77,13 +77,58 @@ async def run_session(browser, db, vm_id, session_doc):
             ),
             locale="en-US",
             timezone_id="America/New_York",
+            color_scheme="dark",
+            java_script_enabled=True,
         )
-        # Remove navigator.webdriver flag to avoid bot detection
+        # Comprehensive stealth: patch all automation indicators
         await context.add_init_script("""
+            // Hide webdriver flag
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            // Fake plugins
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [
+                    { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer', description: 'Portable Document Format' },
+                    { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai', description: '' },
+                    { name: 'Native Client', filename: 'internal-nacl-plugin', description: '' },
+                ],
+            });
+            // Fake languages
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            // Fake platform
+            Object.defineProperty(navigator, 'platform', { get: () => 'Linux x86_64' });
+            // Fake hardwareConcurrency
+            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 4 });
+            // Fake deviceMemory
+            Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+            // Fix chrome object
+            window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){} };
+            // Fix permissions query
+            const origQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) =>
+                parameters.name === 'notifications'
+                    ? Promise.resolve({ state: Notification.permission })
+                    : origQuery(parameters);
         """)
         page = await context.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+
+        # Dismiss YouTube consent/bot dialogs if present
+        try:
+            await asyncio.sleep(3)
+            # Try dismissing cookie consent
+            for selector in [
+                'button[aria-label="Accept all"]',
+                'button[aria-label="Reject all"]',
+                '#content ytd-consent-bump-v2-lightbox button',
+                'tp-yt-paper-dialog #button',
+            ]:
+                btn = page.locator(selector).first
+                if await btn.is_visible(timeout=1000):
+                    await btn.click()
+                    await asyncio.sleep(1)
+                    break
+        except Exception:
+            pass
 
         # Mark session as running
         session_ref = db.collection("sessions").document(session_id)
@@ -200,6 +245,14 @@ async def agent_loop(vm_id, cred_path):
                 "--disable-software-rasterizer",
                 "--incognito",
                 "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--window-size=1280,720",
+                "--start-maximized",
+                "--disable-extensions",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-renderer-backgrounding",
+                "--lang=en-US,en",
             ],
         )
         print("[AGENT] Chromium launched — VM is READY")
