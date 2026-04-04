@@ -7,6 +7,7 @@ import VMDetailPage from './pages/VMDetailPage';
 import CamerasPage from './pages/CamerasPage';
 import SettingsPage from './pages/SettingsPage';
 import PlatformPage from './pages/PlatformPage';
+import WorkflowDesignerPage from './pages/WorkflowDesignerPage';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -36,6 +37,8 @@ function AppRoutes() {
         <Route path="vm/:vmId" element={<VMDetailPage />} />
         <Route path="cameras" element={<CamerasPage />} />
         <Route path="platform/:platformKey" element={<PlatformPage />} />
+        <Route path="platform/:platformKey/workflow" element={<WorkflowDesignerPage />} />
+        <Route path="platform/:platformKey/workflow/:workflowId" element={<WorkflowDesignerPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

@@ -7,6 +7,7 @@ import {
   Settings,
   Server,
   Activity,
+  Zap,
 } from 'lucide-react';
 import { PLATFORMS } from './PlatformLogos';
 
@@ -131,20 +132,36 @@ export default function DashboardLayout() {
             </span>
           </div>
           {PLATFORMS.map((p) => {
-            const isActive = location.pathname === `/platform/${p.key}`;
+            const isPlatformActive = location.pathname === `/platform/${p.key}`;
+            const isWorkflowActive = location.pathname.startsWith(`/platform/${p.key}/workflow`);
+            const isActive = isPlatformActive || isWorkflowActive;
             return (
-              <button
-                key={p.key}
-                onClick={() => navigate(`/platform/${p.key}`)}
-                className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition ${
-                  isActive
-                    ? 'bg-primary-50 text-primary-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <p.Logo size={18} />
-                <span>{p.label}</span>
-              </button>
+              <div key={p.key}>
+                <button
+                  onClick={() => navigate(`/platform/${p.key}`)}
+                  className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-sm transition ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <p.Logo size={18} />
+                  <span>{p.label}</span>
+                </button>
+                {isActive && (
+                  <button
+                    onClick={() => navigate(`/platform/${p.key}/workflow`)}
+                    className={`w-full flex items-center gap-1.5 pl-9 py-1 rounded-lg text-xs transition ${
+                      isWorkflowActive
+                        ? 'text-primary-600 font-medium'
+                        : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    <Zap size={12} />
+                    <span>Workflows</span>
+                  </button>
+                )}
+              </div>
             );
           })}
 

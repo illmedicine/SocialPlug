@@ -79,6 +79,15 @@ export function SpotifyLogo({ size = 20, className = '' }) {
   );
 }
 
+export function YouTubeLogo({ size = 20, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+      <rect width="24" height="24" rx="4" fill="#FF0000" />
+      <path d="M19.6 8.3c-.2-.8-.8-1.4-1.6-1.6C16.8 6.5 12 6.5 12 6.5s-4.8 0-6 .2c-.8.2-1.4.8-1.6 1.6C4.2 9.5 4.2 12 4.2 12s0 2.5.2 3.7c.2.8.8 1.4 1.6 1.6 1.2.2 6 .2 6 .2s4.8 0 6-.2c.8-.2 1.4-.8 1.6-1.6.2-1.2.2-3.7.2-3.7s0-2.5-.2-3.7zM10.5 14.5v-5l4 2.5-4 2.5z" fill="white" />
+    </svg>
+  );
+}
+
 export const PLATFORMS = [
   { key: 'linkedin', label: 'LinkedIn', Logo: LinkedInLogo, color: '#0A66C2', defaultUrl: 'https://www.linkedin.com' },
   { key: 'x', label: 'X', Logo: XLogo, color: '#000000', defaultUrl: 'https://x.com' },
@@ -87,4 +96,5 @@ export const PLATFORMS = [
   { key: 'facebook', label: 'Facebook', Logo: FacebookLogo, color: '#1877F2', defaultUrl: 'https://www.facebook.com' },
   { key: 'instagram', label: 'Instagram', Logo: InstagramLogo, color: '#E4405F', defaultUrl: 'https://www.instagram.com' },
   { key: 'spotify', label: 'Spotify', Logo: SpotifyLogo, color: '#1DB954', defaultUrl: 'https://open.spotify.com' },
+  { key: 'youtube', label: 'YouTube', Logo: YouTubeLogo, color: '#FF0000', defaultUrl: 'https://www.youtube.com' },
 ];
