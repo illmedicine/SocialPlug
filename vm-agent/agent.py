@@ -252,7 +252,7 @@ async def agent_loop(vm_id, cred_path):
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
-            headless=False,
+            headless=True,
             args=[
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
@@ -264,7 +264,7 @@ async def agent_loop(vm_id, cred_path):
                 "--lang=en-US,en",
             ],
         )
-        print("[AGENT] Chromium launched (headed via Xvfb) — VM is READY")
+        print("[AGENT] Chromium launched (headless) — VM is READY")
 
         # Now we're truly ready
         vm_ref.update({
