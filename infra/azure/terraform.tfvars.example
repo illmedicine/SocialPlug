@@ -1,0 +1,7 @@
+# Get your Subscription ID from: Azure Portal → Subscriptions
+# Or run: az account show --query id -o tsv
+
+subscription_id     = ""
+location            = "eastus"
+ssh_public_key_path = "C:/Users/demar/.ssh/socialplug_key.pub"
+firebase_bucket     = "livepay-petition.firebasestorage.app"

@@ -1,0 +1,78 @@
+#cloud-config
+# ══════════════════════════════════════════════════════════════════════════════
+# SocialPlug VM Agent — Cloud-Init for Azure VMs
+# by Illy Robotic Instruments
+# ══════════════════════════════════════════════════════════════════════════════
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - git
+  - libnss3
+  - libatk1.0-0
+  - libatk-bridge2.0-0
+  - libcups2
+  - libdrm2
+  - libxkbcommon0
+  - libxcomposite1
+  - libxdamage1
+  - libxrandr2
+  - libgbm1
+  - libpango-1.0-0
+  - libcairo2
+  - libasound2
+  - libxshmfence1
+  - fonts-liberation
+  - xdg-utils
+
+write_files:
+  - path: /etc/systemd/system/socialplug-agent.service
+    content: |
+      [Unit]
+      Description=SocialPlug VM Agent — by Illy Robotic Instruments
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=azureuser
+      WorkingDirectory=/home/azureuser/socialplug-agent
+      ExecStart=/home/azureuser/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --bucket ${firebase_bucket}
+      Restart=always
+      RestartSec=10
+      Environment=DISPLAY=:0
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - |
+    sudo -u azureuser bash -c '
+      set -e
+      cd /home/azureuser
+
+      git clone https://github.com/illmedicine/SocialPlug.git || true
+
+      mkdir -p socialplug-agent
+      cp SocialPlug/vm-agent/agent.py socialplug-agent/
+      cp SocialPlug/vm-agent/requirements.txt socialplug-agent/
+      cd socialplug-agent
+
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+      python -m playwright install chromium
+      python -m playwright install-deps chromium
+    '
+
+  - systemctl daemon-reload
+  - systemctl enable socialplug-agent
+  - systemctl start socialplug-agent
+
+final_message: "SocialPlug agent is running on ${vm_id}!"

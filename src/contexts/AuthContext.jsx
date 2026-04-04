@@ -21,10 +21,8 @@ import { auth, googleProvider, db } from '../firebase';
 const AuthContext = createContext(null);
 
 const DEFAULT_VMS = [
-  { name: 'VM-1', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
-  { name: 'VM-2', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
-  { name: 'VM-3', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
-  { name: 'VM-4', specs: 'ARM Ampere A1 · 1 OCPU · 6 GB RAM' },
+  { name: 'VM-1', specs: 'Azure B2pts v2 · 2 vCPU · 1 GB RAM' },
+  { name: 'VM-2', specs: 'Azure B2ats v2 · 2 vCPU · 1 GB RAM' },
 ];
 
 async function seedVMs(uid) {
@@ -37,7 +35,7 @@ async function seedVMs(uid) {
       name: vm.name,
       specs: vm.specs,
       userId: uid,
-      provider: 'oracle',
+      provider: 'azure',
       status: 'offline',
       activeSessions: 0,
       publicIP: '',
