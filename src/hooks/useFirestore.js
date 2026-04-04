@@ -9,7 +9,6 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,11 +25,15 @@ export function useVMs() {
     if (!user) { setLoading(false); return; }
     const q = query(
       collection(db, 'vms'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setVMs(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setVMs(docs);
+      setLoading(false);
+    }, (err) => {
+      console.warn('VMs query error:', err.message);
       setLoading(false);
     });
     return unsubscribe;
@@ -60,11 +63,15 @@ export function useSessions(vmId) {
     const q = query(
       collection(db, 'sessions'),
       where('vmId', '==', vmId),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSessions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setSessions(docs);
+      setLoading(false);
+    }, (err) => {
+      console.warn('Sessions query error:', err.message);
       setLoading(false);
     });
     return unsubscribe;
@@ -111,11 +118,15 @@ export function useAllSessions() {
     const q = query(
       collection(db, 'sessions'),
       where('userId', '==', user.uid),
-      where('status', 'in', ['running', 'pending']),
-      orderBy('createdAt', 'desc')
+      where('status', 'in', ['running', 'pending'])
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSessions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setSessions(docs);
+      setLoading(false);
+    }, (err) => {
+      console.warn('AllSessions query error:', err.message);
       setLoading(false);
     });
     return unsubscribe;

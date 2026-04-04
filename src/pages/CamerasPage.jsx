@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Camera, Globe, Clock, Monitor, RefreshCw } from 'lucide-react';
@@ -16,11 +16,15 @@ export default function CamerasPage() {
     const q = query(
       collection(db, 'sessions'),
       where('userId', '==', user.uid),
-      where('status', 'in', ['running', 'pending']),
-      orderBy('createdAt', 'desc')
+      where('status', 'in', ['running', 'pending'])
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSessions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setSessions(docs);
+      setLoading(false);
+    }, (err) => {
+      console.warn('Cameras query error:', err.message);
       setLoading(false);
     });
     return unsubscribe;
