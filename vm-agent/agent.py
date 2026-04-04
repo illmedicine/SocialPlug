@@ -77,10 +77,8 @@ async def run_session(browser, db, vm_id, session_doc):
             ),
             locale="en-US",
             timezone_id="America/New_York",
-            color_scheme="dark",
-            java_script_enabled=True,
         )
-        # Comprehensive stealth: patch all automation indicators
+        # Stealth: patch automation indicators
         await context.add_init_script("""
             // Hide webdriver flag
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
@@ -237,25 +235,19 @@ async def agent_loop(vm_id, cred_path):
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
-            headless=True,
+            headless=False,
             args=[
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--disable-software-rasterizer",
-                "--incognito",
                 "--disable-blink-features=AutomationControlled",
                 "--disable-infobars",
                 "--window-size=1280,720",
-                "--start-maximized",
-                "--disable-extensions",
-                "--disable-background-timer-throttling",
-                "--disable-backgrounding-occluded-windows",
-                "--disable-renderer-backgrounding",
                 "--lang=en-US,en",
             ],
         )
-        print("[AGENT] Chromium launched — VM is READY")
+        print("[AGENT] Chromium launched (headed via Xvfb) — VM is READY")
 
         # Now we're truly ready
         vm_ref.update({
