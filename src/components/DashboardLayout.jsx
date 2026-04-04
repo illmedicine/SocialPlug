@@ -70,7 +70,7 @@ export default function DashboardLayout() {
                   <div className="flex-1 text-left min-w-0">
                     <div className="truncate">{vm.name}</div>
                     <div className="text-[10px] text-gray-400 truncate">
-                      {vm.specs || 'Oracle ARM · 1 OCPU · 6 GB'}
+                      {vm.specs || 'Azure VM'}
                     </div>
                   </div>
                   <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${

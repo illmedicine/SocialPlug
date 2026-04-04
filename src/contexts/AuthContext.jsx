@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -27,7 +28,17 @@ const DEFAULT_VMS = [
 async function seedVMs(uid) {
   const q = query(collection(db, 'vms'), where('userId', '==', uid));
   const snap = await getDocs(q);
-  if (snap.size > 0) return; // already seeded
+
+  // Migrate: if existing VMs are old Oracle ones, delete them and re-seed
+  const hasOldVMs = snap.docs.some(
+    (d) => d.data().provider !== 'azure'
+  );
+  if (snap.size > 0 && !hasOldVMs) return; // already on Azure, nothing to do
+
+  // Delete any stale VMs (Oracle leftovers)
+  for (const d of snap.docs) {
+    await deleteDoc(doc(db, 'vms', d.id));
+  }
 
   for (const vm of DEFAULT_VMS) {
     await addDoc(collection(db, 'vms'), {

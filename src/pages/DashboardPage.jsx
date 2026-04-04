@@ -26,7 +26,7 @@ export default function DashboardPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">VM Dashboard</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Your Oracle Cloud Always Free VM cluster — 4 ARM Ampere instances
+          Your Azure Free Tier VM cluster — {vms.length} cloud instances
         </p>
       </div>
 
@@ -76,7 +76,7 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-semibold text-gray-800">{vm.name}</h3>
                     <div className="text-xs text-gray-400">
-                      {vm.specs || 'ARM Ampere A1 · 1 OCPU · 6 GB RAM'}
+                      {vm.specs || 'Azure VM'}
                     </div>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                   <Activity size={11} />
                   {vmSessions.length} active session{vmSessions.length !== 1 ? 's' : ''}
                 </span>
-                <span>Oracle Cloud · Always Free</span>
+                <span>{vm.provider === 'azure' ? 'Azure · Free Tier' : 'Cloud VM'}</span>
               </div>
 
               {/* Session previews */}
