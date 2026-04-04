@@ -153,7 +153,31 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
     print(f"[AGENT] SocialPlug agent starting for VM: {vm_id}")
     db, bucket = init_firebase(cred_path, storage_bucket)
 
-    vm_ref = db.collection("vms").document(vm_id)
+    # Auto-discover Firestore document: vm_id may be a human name like "VM-1"
+    # rather than the actual Firestore doc ID. Query by name to find the doc.
+    vm_ref = None
+    doc_id = vm_id
+    try:
+        # First try as literal doc ID
+        snap = db.collection("vms").document(vm_id).get()
+        if snap.exists:
+            vm_ref = db.collection("vms").document(vm_id)
+            doc_id = vm_id
+            print(f"[AGENT] Found VM by doc ID: {vm_id}")
+    except Exception:
+        pass
+
+    if vm_ref is None:
+        # Query by name field
+        print(f"[AGENT] Searching for VM with name={vm_id}…")
+        results = list(db.collection("vms").where("name", "==", vm_id).limit(1).stream())
+        if results:
+            doc_id = results[0].id
+            vm_ref = db.collection("vms").document(doc_id)
+            print(f"[AGENT] Found VM doc: {doc_id} (name={vm_id})")
+        else:
+            print(f"[AGENT] ERROR: No VM found with name or ID '{vm_id}'. Exiting.")
+            sys.exit(1)
 
     # Signal that we're booting (not yet ready)
     vm_ref.update({
@@ -190,10 +214,10 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
 
         try:
             while True:
-                # Poll for pending sessions
+                # Poll for pending sessions (vmId in sessions = Firestore doc ID)
                 pending = (
                     db.collection("sessions")
-                    .where("vmId", "==", vm_id)
+                    .where("vmId", "==", doc_id)
                     .where("status", "==", "pending")
                     .stream()
                 )
@@ -202,7 +226,7 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
                     sid = session_doc.id
                     if sid not in active_tasks and len(active_tasks) < MAX_TABS:
                         task = asyncio.create_task(
-                            run_session(browser, db, bucket, vm_id, session_doc)
+                            run_session(browser, db, bucket, doc_id, session_doc)
                         )
                         active_tasks[sid] = task
 
