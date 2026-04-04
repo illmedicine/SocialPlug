@@ -14,53 +14,18 @@ import {
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
-export function useEnvironments() {
-  const { user } = useAuth();
-  const [environments, setEnvironments] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    const q = query(
-      collection(db, 'environments'),
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setEnvironments(
-        snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
-      );
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, [user]);
-
-  const addEnvironment = async (name, icon = '🏢') => {
-    return addDoc(collection(db, 'environments'), {
-      name,
-      icon,
-      userId: user.uid,
-      createdAt: serverTimestamp(),
-    });
-  };
-
-  const deleteEnvironment = async (id) => {
-    return deleteDoc(doc(db, 'environments', id));
-  };
-
-  return { environments, loading, addEnvironment, deleteEnvironment };
-}
-
-export function useVMs(environmentId) {
+/**
+ * Hook: all VMs belonging to the current user (top-level, no environment nesting).
+ */
+export function useVMs() {
   const { user } = useAuth();
   const [vms, setVMs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !environmentId) { setLoading(false); return; }
+    if (!user) { setLoading(false); return; }
     const q = query(
       collection(db, 'vms'),
-      where('environmentId', '==', environmentId),
       where('userId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
@@ -69,17 +34,19 @@ export function useVMs(environmentId) {
       setLoading(false);
     });
     return unsubscribe;
-  }, [user, environmentId]);
+  }, [user]);
 
   const addVM = async (data) => {
     return addDoc(collection(db, 'vms'), {
       ...data,
-      environmentId,
       userId: user.uid,
       status: 'offline',
+      activeSessions: 0,
       publicIP: data.publicIP || '',
+      provider: data.provider || 'oracle',
       agentKey: crypto.randomUUID(),
       createdAt: serverTimestamp(),
+      lastSeen: null,
     });
   };
 
@@ -94,6 +61,9 @@ export function useVMs(environmentId) {
   return { vms, loading, addVM, updateVM, deleteVM };
 }
 
+/**
+ * Hook: sessions for a specific VM.
+ */
 export function useSessions(vmId) {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
@@ -114,11 +84,12 @@ export function useSessions(vmId) {
     return unsubscribe;
   }, [user, vmId]);
 
-  const addSession = async (url) => {
+  const addSession = async (url, platform = null) => {
     return addDoc(collection(db, 'sessions'), {
       url,
       vmId,
       userId: user.uid,
+      platform: platform || null,
       status: 'pending',
       latestScreenshot: null,
       screenshotUpdatedAt: null,
@@ -139,4 +110,30 @@ export function useSessions(vmId) {
   };
 
   return { sessions, loading, addSession, updateSession, stopSession, deleteSession };
+}
+
+/**
+ * Hook: all active sessions across all VMs for current user.
+ */
+export function useAllSessions() {
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    const q = query(
+      collection(db, 'sessions'),
+      where('userId', '==', user.uid),
+      where('status', 'in', ['running', 'pending']),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setSessions(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, [user]);
+
+  return { sessions, loading };
 }

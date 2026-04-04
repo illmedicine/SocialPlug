@@ -24,7 +24,7 @@ export default function AddVMModal({ onClose, onAdd }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Add VM Room</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Add Virtual Machine</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
@@ -33,13 +33,13 @@ export default function AddVMModal({ onClose, onAdd }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Room Name
+              VM Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Chrome Runner 1"
+              placeholder="e.g. VM-1 (Oracle ARM)"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               autoFocus
             />
@@ -104,7 +104,7 @@ export default function AddVMModal({ onClose, onAdd }) {
               disabled={!name.trim()}
               className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition"
             >
-              Add Room
+              Add VM
             </button>
           </div>
         </form>

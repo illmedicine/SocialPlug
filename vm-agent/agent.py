@@ -1,14 +1,17 @@
 """
-Echo Vue VM Agent
-Runs on each Oracle Cloud Free Tier VM.
-Listens to Firestore for session commands, launches Chrome via Playwright,
+SocialPlug VM Agent — by Illy Robotic Instruments
+Runs on each cloud VM (Oracle Cloud Free Tier, etc).
+On startup: installs Playwright browsers if needed, launches headless Chromium,
+heartbeats to Firestore every 15s, polls for pending session commands,
 takes periodic screenshots, and uploads them to Firebase Storage.
+The VM is marked "ready" only after Chromium launches successfully.
 """
 import asyncio
 import argparse
-import io
+import subprocess
+import shutil
+import sys
 import time
-import uuid
 from datetime import datetime
 
 import firebase_admin
@@ -16,8 +19,28 @@ from firebase_admin import credentials, firestore, storage
 from playwright.async_api import async_playwright
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-SCREENSHOT_INTERVAL = 60  # seconds
+SCREENSHOT_INTERVAL = 60   # seconds between screenshots per session
+HEARTBEAT_INTERVAL = 15    # seconds between VM heartbeats
+POLL_INTERVAL = 5          # seconds between session polling
 MAX_TABS = 10
+
+
+# ── Bootstrap ──────────────────────────────────────────────────────────────────
+def ensure_playwright_browsers():
+    """Install Playwright Chromium if not already present."""
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            path = p.chromium.executable_path
+            if path and shutil.which(path):
+                print(f"[BOOT] Chromium already installed at {path}")
+                return
+    except Exception:
+        pass
+    print("[BOOT] Installing Playwright Chromium…")
+    subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
+    subprocess.check_call([sys.executable, "-m", "playwright", "install-deps", "chromium"])
+    print("[BOOT] Chromium installed successfully")
 
 
 def init_firebase(cred_path, storage_bucket):
@@ -27,13 +50,14 @@ def init_firebase(cred_path, storage_bucket):
     return firestore.client(), storage.bucket()
 
 
+# ── Screenshot helpers ─────────────────────────────────────────────────────────
 async def take_screenshot(page):
-    """Capture a screenshot and return bytes."""
+    """Capture a viewport screenshot and return PNG bytes."""
     return await page.screenshot(type="png", full_page=False)
 
 
 async def upload_screenshot(bucket, vm_id, session_id, screenshot_bytes):
-    """Upload screenshot to Firebase Storage and return public URL."""
+    """Upload screenshot to Firebase Storage and return its public URL."""
     blob_name = f"screenshots/{vm_id}/{session_id}/{int(time.time())}.png"
     blob = bucket.blob(blob_name)
     blob.upload_from_string(screenshot_bytes, content_type="image/png")
@@ -41,8 +65,9 @@ async def upload_screenshot(bucket, vm_id, session_id, screenshot_bytes):
     return blob.public_url
 
 
+# ── Session runner ─────────────────────────────────────────────────────────────
 async def run_session(browser, db, bucket, vm_id, session_doc):
-    """Manage a single Chrome tab session."""
+    """Manage a single Chrome tab session with automatic screenshot loop."""
     session_id = session_doc.id
     session_data = session_doc.to_dict()
     url = session_data["url"]
@@ -52,7 +77,10 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
     try:
         context = await browser.new_context(
             viewport={"width": 1280, "height": 720},
-            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            user_agent=(
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
         )
         page = await context.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -61,29 +89,24 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
         session_ref = db.collection("sessions").document(session_id)
         session_ref.update({"status": "running"})
 
-        # Screenshot loop
+        # Automatic screenshot loop — runs until session is stopped
         while True:
             current = session_ref.get()
             if not current.exists:
                 break
-            current_data = current.to_dict()
-            if current_data.get("status") in ("stopping", "stopped"):
+            status = current.to_dict().get("status", "")
+            if status in ("stopping", "stopped"):
                 break
 
-            # Take screenshot
             screenshot_bytes = await take_screenshot(page)
             public_url = await upload_screenshot(
                 bucket, vm_id, session_id, screenshot_bytes
             )
-
-            # Update Firestore with latest screenshot URL
-            session_ref.update(
-                {
-                    "latestScreenshot": public_url,
-                    "screenshotUpdatedAt": firestore.SERVER_TIMESTAMP,
-                }
-            )
-            print(f"[SESSION {session_id}] Screenshot uploaded: {public_url}")
+            session_ref.update({
+                "latestScreenshot": public_url,
+                "screenshotUpdatedAt": firestore.SERVER_TIMESTAMP,
+            })
+            print(f"[SESSION {session_id}] Screenshot → {public_url}")
 
             await asyncio.sleep(SCREENSHOT_INTERVAL)
 
@@ -94,7 +117,6 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
             await context.close()
         except Exception:
             pass
-        # Mark stopped
         try:
             db.collection("sessions").document(session_id).update({"status": "stopped"})
         except Exception:
@@ -102,16 +124,47 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
         print(f"[SESSION {session_id}] Closed")
 
 
+# ── Heartbeat ──────────────────────────────────────────────────────────────────
+async def heartbeat_loop(vm_ref, active_tasks):
+    """Send periodic heartbeat so the frontend knows this VM is alive & ready."""
+    while True:
+        try:
+            vm_ref.update({
+                "status": "online",
+                "activeSessions": len(active_tasks),
+                "lastSeen": firestore.SERVER_TIMESTAMP,
+            })
+        except Exception as e:
+            print(f"[HEARTBEAT] Error: {e}")
+        await asyncio.sleep(HEARTBEAT_INTERVAL)
+
+
+# ── Main agent loop ───────────────────────────────────────────────────────────
 async def agent_loop(vm_id, cred_path, storage_bucket):
-    """Main agent loop: listen for new sessions and manage Chrome."""
-    print(f"[AGENT] Starting Echo Vue agent for VM: {vm_id}")
+    """
+    Startup sequence:
+      1. Init Firebase
+      2. Install Playwright Chromium if missing (auto)
+      3. Launch headless Chromium
+      4. Mark VM as "online" (= ready) — only after Chromium is confirmed
+      5. Start heartbeat
+      6. Poll Firestore for pending sessions → auto-launch Chrome tabs
+    """
+    print(f"[AGENT] SocialPlug agent starting for VM: {vm_id}")
     db, bucket = init_firebase(cred_path, storage_bucket)
 
-    # Mark VM as online
     vm_ref = db.collection("vms").document(vm_id)
-    vm_ref.update({"status": "online", "lastSeen": firestore.SERVER_TIMESTAMP})
 
-    active_tasks = {}  # session_id -> asyncio.Task
+    # Signal that we're booting (not yet ready)
+    vm_ref.update({
+        "status": "booting",
+        "lastSeen": firestore.SERVER_TIMESTAMP,
+    })
+
+    # Auto-install Chromium
+    ensure_playwright_browsers()
+
+    active_tasks: dict[str, asyncio.Task] = {}
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
@@ -123,11 +176,21 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
                 "--disable-software-rasterizer",
             ],
         )
-        print("[AGENT] Chromium browser launched")
+        print("[AGENT] Chromium launched — VM is READY")
+
+        # Now we're truly ready
+        vm_ref.update({
+            "status": "online",
+            "activeSessions": 0,
+            "lastSeen": firestore.SERVER_TIMESTAMP,
+        })
+
+        # Start heartbeat in background
+        hb_task = asyncio.create_task(heartbeat_loop(vm_ref, active_tasks))
 
         try:
             while True:
-                # Query pending sessions for this VM
+                # Poll for pending sessions
                 pending = (
                     db.collection("sessions")
                     .where("vmId", "==", vm_id)
@@ -144,25 +207,16 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
                         active_tasks[sid] = task
 
                 # Clean up completed tasks
-                done = [sid for sid, task in active_tasks.items() if task.done()]
+                done = [sid for sid, t in active_tasks.items() if t.done()]
                 for sid in done:
                     del active_tasks[sid]
 
-                # Update VM status
-                vm_ref.update(
-                    {
-                        "activeSessions": len(active_tasks),
-                        "lastSeen": firestore.SERVER_TIMESTAMP,
-                        "status": "online",
-                    }
-                )
-
-                await asyncio.sleep(5)  # Poll every 5 seconds
+                await asyncio.sleep(POLL_INTERVAL)
 
         except KeyboardInterrupt:
-            print("[AGENT] Shutting down...")
+            print("[AGENT] Shutting down…")
         finally:
-            # Cancel all active sessions
+            hb_task.cancel()
             for task in active_tasks.values():
                 task.cancel()
             await browser.close()
@@ -171,7 +225,7 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Echo Vue VM Agent")
+    parser = argparse.ArgumentParser(description="SocialPlug VM Agent")
     parser.add_argument("--vm-id", required=True, help="Firestore VM document ID")
     parser.add_argument(
         "--cred",
@@ -180,8 +234,8 @@ def main():
     )
     parser.add_argument(
         "--bucket",
-        default="",
-        help="Firebase Storage bucket (e.g. your-project.appspot.com)",
+        default="livepay-petition.firebasestorage.app",
+        help="Firebase Storage bucket",
     )
     args = parser.parse_args()
 

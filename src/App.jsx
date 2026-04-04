@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardLayout from './components/DashboardLayout';
-import EnvironmentPage from './pages/EnvironmentPage';
+import DashboardPage from './pages/DashboardPage';
 import VMDetailPage from './pages/VMDetailPage';
 import CamerasPage from './pages/CamerasPage';
 import SettingsPage from './pages/SettingsPage';
@@ -32,9 +32,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<EnvironmentPage />} />
-        <Route path="environment/:envId" element={<EnvironmentPage />} />
-        <Route path="environment/:envId/vm/:vmId" element={<VMDetailPage />} />
+        <Route index element={<DashboardPage />} />
+        <Route path="vm/:vmId" element={<VMDetailPage />} />
         <Route path="cameras" element={<CamerasPage />} />
         <Route path="platform/:platformKey" element={<PlatformPage />} />
         <Route path="settings" element={<SettingsPage />} />

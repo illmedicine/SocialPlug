@@ -19,8 +19,8 @@ export default function LoginPage() {
               <line x1="20" y1="12" x2="22" y2="12" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900">Echo Vue</h1>
-          <p className="text-gray-500 mt-1">by Illy Robotics</p>
+          <h1 className="text-4xl font-bold text-gray-900">SocialPlug</h1>
+          <p className="text-gray-500 mt-1">by Illy Robotic Instruments</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-auto">
@@ -44,7 +44,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-xs text-gray-400 mt-8">
-          Cloud VM Management Portal &middot; v1.0
+          SocialPlug &middot; Cloud VM Management &middot; v1.0
         </p>
       </div>
     </div>

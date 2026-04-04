@@ -31,7 +31,7 @@ export default function CamerasPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <Camera size={24} className="text-primary-500" />
-          Live Cameras
+          Live Monitors
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">
           All active Chrome sessions with live screenshot previews
@@ -47,7 +47,7 @@ export default function CamerasPage() {
           <Camera size={48} className="mx-auto text-gray-300 mb-3" />
           <h3 className="text-lg font-medium text-gray-600 mb-1">No Active Sessions</h3>
           <p className="text-sm text-gray-400">
-            Launch Chrome sessions from a VM room to see live previews here.
+            Launch Chrome sessions from a VM to see live previews here.
           </p>
         </div>
       ) : (

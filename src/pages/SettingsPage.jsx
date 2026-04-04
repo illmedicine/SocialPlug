@@ -102,15 +102,18 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <h2 className="font-semibold text-gray-800 mb-2">VM Agent Setup</h2>
         <p className="text-sm text-gray-500 mb-3">
-          Each VM needs the Echo Vue agent installed. The agent connects to Firebase
-          to receive session commands and upload screenshots.
+          Each VM needs the SocialPlug agent installed. The agent connects to Firebase
+          to receive session commands and upload screenshots. Once running, the agent
+          auto-installs Chromium, launches the browser, and heartbeats every 15 seconds
+          so the dashboard knows the VM is ready — no manual commands needed after setup.
         </p>
         <div className="bg-gray-50 rounded-lg p-3 text-xs font-mono text-gray-600">
-          <div className="text-gray-400 mb-1"># Install on each VM</div>
-          <div>git clone &lt;your-repo&gt;</div>
-          <div>cd vm-agent</div>
-          <div>pip install -r requirements.txt</div>
-          <div>python agent.py --vm-id YOUR_VM_ID</div>
+          <div className="text-gray-400 mb-1"># One-time setup on each VM</div>
+          <div>git clone https://github.com/illmedicine/SocialPlug.git</div>
+          <div>cd SocialPlug/vm-agent</div>
+          <div>chmod +x setup-vm.sh</div>
+          <div>./setup-vm.sh YOUR_VM_ID</div>
+          <div className="text-gray-400 mt-2"># That's it — the agent starts automatically on boot</div>
         </div>
       </div>
     </div>
