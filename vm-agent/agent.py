@@ -8,6 +8,7 @@ The VM is marked "ready" only after Chromium launches successfully.
 """
 import asyncio
 import argparse
+import base64
 import subprocess
 import shutil
 import sys
@@ -15,7 +16,7 @@ import time
 from datetime import datetime
 
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore
 from playwright.async_api import async_playwright
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -43,30 +44,23 @@ def ensure_playwright_browsers():
     print("[BOOT] Chromium installed successfully")
 
 
-def init_firebase(cred_path, storage_bucket):
+def init_firebase(cred_path):
     """Initialize Firebase Admin SDK."""
     cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred, {"storageBucket": storage_bucket})
-    return firestore.client(), storage.bucket()
+    firebase_admin.initialize_app(cred)
+    return firestore.client()
 
 
-# ── Screenshot helpers ─────────────────────────────────────────────────────────
+# ── Screenshot helpers ─────────────────────────────────────────────────────────────────
 async def take_screenshot(page):
-    """Capture a viewport screenshot and return PNG bytes."""
-    return await page.screenshot(type="png", full_page=False)
-
-
-async def upload_screenshot(bucket, vm_id, session_id, screenshot_bytes):
-    """Upload screenshot to Firebase Storage and return its public URL."""
-    blob_name = f"screenshots/{vm_id}/{session_id}/{int(time.time())}.png"
-    blob = bucket.blob(blob_name)
-    blob.upload_from_string(screenshot_bytes, content_type="image/png")
-    blob.make_public()
-    return blob.public_url
+    """Capture a viewport screenshot as JPEG and return a base64 data URI."""
+    jpg_bytes = await page.screenshot(type="jpeg", quality=50, full_page=False)
+    b64 = base64.b64encode(jpg_bytes).decode("ascii")
+    return f"data:image/jpeg;base64,{b64}"
 
 
 # ── Session runner ─────────────────────────────────────────────────────────────
-async def run_session(browser, db, bucket, vm_id, session_doc):
+async def run_session(browser, db, vm_id, session_doc):
     """Manage a single Chrome tab session with automatic screenshot loop."""
     session_id = session_doc.id
     session_data = session_doc.to_dict()
@@ -99,15 +93,12 @@ async def run_session(browser, db, bucket, vm_id, session_doc):
                 break
 
             try:
-                screenshot_bytes = await take_screenshot(page)
-                public_url = await upload_screenshot(
-                    bucket, vm_id, session_id, screenshot_bytes
-                )
+                data_uri = await take_screenshot(page)
                 session_ref.update({
-                    "latestScreenshot": public_url,
+                    "latestScreenshot": data_uri,
                     "screenshotUpdatedAt": firestore.SERVER_TIMESTAMP,
                 })
-                print(f"[SESSION {session_id}] Screenshot → {public_url}")
+                print(f"[SESSION {session_id}] Screenshot captured ({len(data_uri)} bytes)")
             except Exception as e:
                 print(f"[SESSION {session_id}] Screenshot failed (non-fatal): {e}")
 
@@ -143,7 +134,7 @@ async def heartbeat_loop(vm_ref, active_tasks):
 
 
 # ── Main agent loop ───────────────────────────────────────────────────────────
-async def agent_loop(vm_id, cred_path, storage_bucket):
+async def agent_loop(vm_id, cred_path):
     """
     Startup sequence:
       1. Init Firebase
@@ -154,7 +145,7 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
       6. Poll Firestore for pending sessions → auto-launch Chrome tabs
     """
     print(f"[AGENT] SocialPlug agent starting for VM: {vm_id}")
-    db, bucket = init_firebase(cred_path, storage_bucket)
+    db = init_firebase(cred_path)
 
     # Auto-discover Firestore document: vm_id may be a human name like "VM-1"
     # rather than the actual Firestore doc ID. Query by name to find the doc.
@@ -217,21 +208,23 @@ async def agent_loop(vm_id, cred_path, storage_bucket):
 
         try:
             while True:
-                # Poll for pending sessions (vmId in sessions = Firestore doc ID)
-                pending = (
-                    db.collection("sessions")
-                    .where("vmId", "==", doc_id)
-                    .where("status", "==", "pending")
-                    .stream()
-                )
+                # Poll for pending AND running sessions
+                # "running" recovery: sessions left running after an agent restart
+                for status_filter in ("pending", "running"):
+                    sessions = (
+                        db.collection("sessions")
+                        .where("vmId", "==", doc_id)
+                        .where("status", "==", status_filter)
+                        .stream()
+                    )
 
-                for session_doc in pending:
-                    sid = session_doc.id
-                    if sid not in active_tasks and len(active_tasks) < MAX_TABS:
-                        task = asyncio.create_task(
-                            run_session(browser, db, bucket, doc_id, session_doc)
-                        )
-                        active_tasks[sid] = task
+                    for session_doc in sessions:
+                        sid = session_doc.id
+                        if sid not in active_tasks and len(active_tasks) < MAX_TABS:
+                            task = asyncio.create_task(
+                                run_session(browser, db, doc_id, session_doc)
+                            )
+                            active_tasks[sid] = task
 
                 # Clean up completed tasks
                 done = [sid for sid, t in active_tasks.items() if t.done()]
@@ -261,12 +254,12 @@ def main():
     )
     parser.add_argument(
         "--bucket",
-        default="livepay-petition.appspot.com",
-        help="Firebase Storage bucket",
+        default="",
+        help="(Unused, kept for backwards compat)",
     )
     args = parser.parse_args()
 
-    asyncio.run(agent_loop(args.vm_id, args.cred, args.bucket))
+    asyncio.run(agent_loop(args.vm_id, args.cred))
 
 
 if __name__ == "__main__":
