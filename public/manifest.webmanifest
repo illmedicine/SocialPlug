@@ -1,0 +1,16 @@
+{
+  "name": "SocialPlug",
+  "short_name": "SocialPlug",
+  "description": "Cloud VM management & social automation by Illy Robotic Instruments",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+  ]
+}

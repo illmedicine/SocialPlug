@@ -4,6 +4,8 @@
 
 A static-hosted management portal for running Chrome browser sessions across multiple cloud VMs with live screenshot monitoring. Frontend deployed to GitHub Pages, backend powered by Firebase (free tier), VMs on Oracle Cloud Always Free Tier.
 
+📱 **Android app:** see [`android-app/README.md`](android-app/README.md). The Android build is a Capacitor wrapper around the same React/Firebase code — identical features, same Firestore data, same Google Sign-In account.
+
 ---
 
 ## Architecture

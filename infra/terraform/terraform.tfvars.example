@@ -23,3 +23,8 @@ vm_count = 4
 
 # Firebase Storage bucket (don't change unless using a different project)
 firebase_bucket = "livepay-petition.appspot.com"
+
+# Base64-encode your Firebase service account JSON:
+#   PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes("firebase-credentials.json"))
+#   Linux/Mac:  cat firebase-credentials.json | base64 -w0
+firebase_credentials_b64 = ""

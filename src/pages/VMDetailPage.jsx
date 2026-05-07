@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useSessions } from '../hooks/useFirestore';
+import { useVMManagement } from '../hooks/useVMManagement';
 import {
   ArrowLeft,
   Globe,
@@ -18,6 +19,12 @@ import {
   AlertCircle,
   Loader2,
   List,
+  ExternalLink,
+  Download,
+  RotateCcw,
+  Power,
+  PowerOff,
+  Wrench,
 } from 'lucide-react';
 import ScreenshotViewer from '../components/ScreenshotViewer';
 
@@ -34,11 +41,13 @@ export default function VMDetailPage() {
   const { vmId } = useParams();
   const navigate = useNavigate();
   const { sessions, loading, addSession, stopSession, deleteSession } = useSessions(vmId);
+  const { updateAgent, restartAgent, startVM, stopVM, restartVM, deleteVM } = useVMManagement();
   const [vm, setVM] = useState(null);
   const [urlInput, setUrlInput] = useState('');
   const [batchMode, setBatchMode] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [mgmtAction, setMgmtAction] = useState(null); // currently running management action
 
   useEffect(() => {
     if (!vmId) return;
@@ -92,6 +101,17 @@ export default function VMDetailPage() {
     }
   };
 
+  const handleMgmtAction = async (action, label) => {
+    setMgmtAction(label);
+    try {
+      await action();
+    } catch (err) {
+      alert(`${label} failed: ${err.message}`);
+    } finally {
+      setMgmtAction(null);
+    }
+  };
+
   return (
     <div className="p-6">
       {/* Back */}
@@ -127,6 +147,16 @@ export default function VMDetailPage() {
         </div>
 
         <div className="text-right">
+          {vm?.publicIp && vm?.vncPort && (
+            <a
+              href={`http://${vm.publicIp}:${vm.vncPort}/vnc.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-lg transition mb-2"
+            >
+              <ExternalLink size={12} /> Open Live Browser
+            </a>
+          )}
           <div className="text-2xl font-bold text-primary-600">{activeSessions.length}/{MAX_TABS}</div>
           <div className="text-xs text-gray-500">Active Sessions</div>
         </div>
@@ -143,17 +173,112 @@ export default function VMDetailPage() {
           }
           <div>
             <div className={`font-medium text-sm ${isBooting ? 'text-yellow-800' : 'text-red-800'}`}>
-              {isBooting ? 'VM is booting — installing Chromium & launching browser…' : 'VM is offline'}
+              {isBooting ? 'VM is booting — starting Xvfb & launching Chrome…' : 'VM is offline'}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
               {isBooting
-                ? 'This happens automatically. Sessions can be queued once the agent reports ready.'
+                ? 'A real Chrome browser is starting on a virtual display. Sessions can be queued once the agent reports ready.'
                 : 'The SocialPlug agent is not running on this VM. Start it with the setup script or ensure the systemd service is enabled.'
               }
             </p>
           </div>
         </div>
       )}
+
+      {/* VM Management Controls */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-1.5">
+            <Wrench size={14} /> VM Management
+          </h2>
+          {vm?.lastCommandResult && (
+            <span className="text-[10px] text-gray-400 font-mono">
+              Last: {vm.lastCommandResult}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {/* Agent commands — work for any provider */}
+          <button
+            onClick={() => handleMgmtAction(() => updateAgent(vmId), 'Update Agent')}
+            disabled={!!mgmtAction}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition"
+            title="Pull latest code from GitHub and restart the agent"
+          >
+            {mgmtAction === 'Update Agent' ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+            Update Agent
+          </button>
+          <button
+            onClick={() => handleMgmtAction(() => restartAgent(vmId), 'Restart Agent')}
+            disabled={!!mgmtAction}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 transition"
+            title="Restart the SocialPlug agent process"
+          >
+            {mgmtAction === 'Restart Agent' ? <Loader2 size={12} className="animate-spin" /> : <RotateCcw size={12} />}
+            Restart Agent
+          </button>
+
+          {/* Azure-specific VM lifecycle */}
+          {vm?.provider === 'azure' && (
+            <>
+              {!isReady && !isBooting && (
+                <button
+                  onClick={() => handleMgmtAction(() => startVM(vmId), 'Start VM')}
+                  disabled={!!mgmtAction}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 disabled:opacity-50 transition"
+                  title="Power on the Azure VM"
+                >
+                  {mgmtAction === 'Start VM' ? <Loader2 size={12} className="animate-spin" /> : <Power size={12} />}
+                  Start VM
+                </button>
+              )}
+              {(isReady || isBooting) && (
+                <button
+                  onClick={() => handleMgmtAction(() => restartVM(vmId), 'Restart VM')}
+                  disabled={!!mgmtAction}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700 hover:bg-yellow-100 disabled:opacity-50 transition"
+                  title="Reboot the Azure VM"
+                >
+                  {mgmtAction === 'Restart VM' ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                  Restart VM
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  if (isReady || isBooting) {
+                    handleMgmtAction(() => stopVM(vmId), 'Stop VM');
+                  }
+                }}
+                disabled={!!mgmtAction || (!isReady && !isBooting)}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 disabled:opacity-50 transition"
+                title="Deallocate the Azure VM (saves costs)"
+              >
+                {mgmtAction === 'Stop VM' ? <Loader2 size={12} className="animate-spin" /> : <PowerOff size={12} />}
+                Stop VM
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm(`DELETE ${vm?.name}?\n\nThis will permanently destroy the Azure VM, its disk, and all sessions. This cannot be undone.`)) {
+                    handleMgmtAction(() => deleteVM(vmId), 'Delete VM').then(() => navigate('/'));
+                  }
+                }}
+                disabled={!!mgmtAction}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 disabled:opacity-50 transition"
+                title="Permanently delete this Azure VM"
+              >
+                {mgmtAction === 'Delete VM' ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                Delete VM
+              </button>
+            </>
+          )}
+        </div>
+        {mgmtAction && (
+          <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+            <Loader2 size={10} className="animate-spin" />
+            {mgmtAction}… this may take a moment
+          </p>
+        )}
+      </div>
 
       {/* URL Input — single or batch */}
       <div className="mb-6">
@@ -267,6 +392,7 @@ export default function VMDetailPage() {
       {selectedSession && (
         <ScreenshotViewer
           session={selectedSession}
+          vm={vm}
           onClose={() => setSelectedSession(null)}
         />
       )}
@@ -331,7 +457,7 @@ function SessionCard({ session, onView, onStop, onDelete }) {
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1 text-xs text-gray-400">
             <RefreshCw size={10} />
-            Auto-screenshot every 60s
+            Auto-screenshot · Chrome
           </div>
           <div className="flex items-center gap-1">
             {onStop && (session.status === 'running' || session.status === 'pending') && (

@@ -1,7 +1,10 @@
 #cloud-config
 # ══════════════════════════════════════════════════════════════════════════════
-# SocialPlug VM Agent — Cloud-Init for Azure VMs
+# SocialPlug VM Agent v2 — Cloud-Init for Azure VMs
 # by Illy Robotic Instruments
+#
+# Installs a REAL Chrome / Chromium browser on a virtual display (Xvfb).
+# Tabs managed via Chrome DevTools Protocol. Optional noVNC for live access.
 # ══════════════════════════════════════════════════════════════════════════════
 
 package_update: true
@@ -12,6 +15,13 @@ packages:
   - python3-pip
   - python3-venv
   - git
+  - xvfb
+  - x11vnc
+  - novnc
+  - websockify
+  - xdotool
+  - fonts-liberation
+  - fonts-noto-color-emoji
   - libnss3
   - libatk1.0-0
   - libatk-bridge2.0-0
@@ -26,14 +36,16 @@ packages:
   - libcairo2
   - libasound2
   - libxshmfence1
-  - fonts-liberation
   - xdg-utils
+  - wget
+  - curl
+  - ca-certificates
 
 write_files:
   - path: /etc/systemd/system/socialplug-agent.service
     content: |
       [Unit]
-      Description=SocialPlug VM Agent — by Illy Robotic Instruments
+      Description=SocialPlug VM Agent v2 — by Illy Robotic Instruments
       After=network-online.target
       Wants=network-online.target
 
@@ -41,15 +53,31 @@ write_files:
       Type=simple
       User=azureuser
       WorkingDirectory=/home/azureuser/socialplug-agent
-      ExecStart=/home/azureuser/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --bucket ${firebase_bucket}
+      ExecStart=/home/azureuser/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --vnc
       Restart=always
       RestartSec=10
-      Environment=DISPLAY=:0
 
       [Install]
       WantedBy=multi-user.target
 
+  - path: /home/azureuser/socialplug-agent/firebase-credentials.json.b64
+    owner: azureuser:azureuser
+    permissions: '0600'
+    encoding: text/plain
+    content: |
+      ${firebase_credentials}
+
 runcmd:
+  # Decode Firebase credentials from base64
+  - |
+    sudo -u azureuser bash -c '
+      mkdir -p /home/azureuser/socialplug-agent
+      base64 -d /home/azureuser/socialplug-agent/firebase-credentials.json.b64 \
+        > /home/azureuser/socialplug-agent/firebase-credentials.json
+      chmod 600 /home/azureuser/socialplug-agent/firebase-credentials.json
+      rm -f /home/azureuser/socialplug-agent/firebase-credentials.json.b64
+    '
+
   - |
     sudo -u azureuser bash -c '
       set -e
@@ -66,13 +94,21 @@ runcmd:
       source venv/bin/activate
       pip install --upgrade pip
       pip install -r requirements.txt
-
-      python -m playwright install chromium
-      python -m playwright install-deps chromium
     '
+
+  # Install Chrome on x86 VMs, Chromium on ARM64 — runs after apt packages
+  - |
+    ARCH=$(dpkg --print-architecture)
+    if [ "$ARCH" = "amd64" ]; then
+      wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      dpkg -i /tmp/chrome.deb || apt-get install -f -y
+      rm -f /tmp/chrome.deb
+    else
+      apt-get install -y chromium-browser || snap install chromium
+    fi
 
   - systemctl daemon-reload
   - systemctl enable socialplug-agent
   - systemctl start socialplug-agent
 
-final_message: "SocialPlug agent is running on ${vm_id}!"
+final_message: "SocialPlug agent v2 (real Chrome) is running on ${vm_id}!"

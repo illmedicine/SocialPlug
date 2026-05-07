@@ -1,0 +1,62 @@
+/**
+ * Platform-aware Google Sign-In.
+ * - Web: signInWithPopup (existing behavior, unchanged).
+ * - Native (Capacitor / Android): @capacitor-firebase/authentication
+ *   performs native Google Sign-In and forwards the credential to the
+ *   Firebase Web SDK so the rest of the app (Firestore, Storage,
+ *   Functions, AuthContext) keeps working unchanged.
+ *
+ * IMPORTANT: Capacitor packages are only loaded when running inside a
+ * native shell (detected via window.Capacitor, which Capacitor injects
+ * at runtime). On web, this file never imports them, so a missing
+ * Capacitor install does not break the web sign-in flow.
+ */
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signInWithPopup,
+  signOut as fbSignOut,
+} from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
+
+function isNativeShell() {
+  return (
+    typeof window !== 'undefined' &&
+    !!window.Capacitor &&
+    typeof window.Capacitor.isNativePlatform === 'function' &&
+    window.Capacitor.isNativePlatform()
+  );
+}
+
+async function getNativeFirebaseAuth() {
+  if (!isNativeShell()) return null;
+  try {
+    /* @vite-ignore */
+    const mod = await import('@capacitor-firebase/authentication');
+    return mod.FirebaseAuthentication;
+  } catch (err) {
+    console.warn('[platformAuth] native Firebase auth plugin not available, falling back to web popup', err);
+    return null;
+  }
+}
+
+export async function signInWithGoogle() {
+  const native = await getNativeFirebaseAuth();
+  if (native) {
+    const result = await native.signInWithGoogle();
+    const idToken = result?.credential?.idToken;
+    if (!idToken) throw new Error('Native Google sign-in returned no idToken');
+    const credential = GoogleAuthProvider.credential(idToken);
+    return signInWithCredential(auth, credential);
+  }
+  // Web (or native plugin missing): standard Firebase popup
+  return signInWithPopup(auth, googleProvider);
+}
+
+export async function signOut() {
+  const native = await getNativeFirebaseAuth();
+  if (native) {
+    try { await native.signOut(); } catch {}
+  }
+  return fbSignOut(auth);
+}

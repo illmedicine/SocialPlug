@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
+import Logo from '../components/Logo';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -8,16 +9,8 @@ export default function LoginPage() {
       <div className="text-center">
         {/* Logo */}
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 shadow-lg mb-4">
-            <svg className="w-14 h-14 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="12" r="6" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <line x1="12" y1="2" x2="12" y2="4" />
-              <line x1="12" y1="20" x2="12" y2="22" />
-              <line x1="2" y1="12" x2="4" y2="12" />
-              <line x1="20" y1="12" x2="22" y2="12" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-4 drop-shadow-xl">
+            <Logo size={112} />
           </div>
           <h1 className="text-4xl font-bold text-gray-900">SocialPlug</h1>
           <p className="text-gray-500 mt-1">by Illy Robotic Instruments</p>

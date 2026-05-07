@@ -48,6 +48,12 @@ variable "firebase_bucket" {
   default     = "livepay-petition.appspot.com"
 }
 
+variable "firebase_credentials_b64" {
+  description = "Base64-encoded Firebase service account JSON (cat firebase-credentials.json | base64 -w0)"
+  type        = string
+  sensitive   = true
+}
+
 # ── VM Definitions ────────────────────────────────────────────────────────────
 
 locals {
@@ -118,6 +124,18 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "noVNC"
+    priority                   = 1003
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6080"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
@@ -183,8 +201,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-    vm_id           = each.value.vm_id
-    firebase_bucket = var.firebase_bucket
+    vm_id                  = each.value.vm_id
+    firebase_bucket        = var.firebase_bucket
+    firebase_credentials   = var.firebase_credentials_b64
   }))
 
   tags = {

@@ -78,6 +78,12 @@ variable "firebase_bucket" {
   default     = "livepay-petition.appspot.com"
 }
 
+variable "firebase_credentials_b64" {
+  description = "Base64-encoded Firebase service account JSON (cat firebase-credentials.json | base64 -w0)"
+  type        = string
+  sensitive   = true
+}
+
 # ── Data Sources ──────────────────────────────────────────────────────────────
 
 data "oci_identity_availability_domains" "ads" {
@@ -170,6 +176,17 @@ resource "oci_core_security_list" "public_sl" {
     }
   }
 
+  # noVNC (live interactive browser access via websockify)
+  ingress_security_rules {
+    protocol  = "6"
+    source    = "0.0.0.0/0"
+    stateless = false
+    tcp_options {
+      min = 6080
+      max = 6080
+    }
+  }
+
   # ICMP (ping — helps avoid idle reclamation detection)
   ingress_security_rules {
     protocol  = "1" # ICMP
@@ -216,8 +233,9 @@ resource "oci_core_instance" "socialplug_vm" {
   metadata = {
     ssh_authorized_keys = file(var.ssh_public_key_path)
     user_data           = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-      vm_id          = "VM-${count.index + 1}"
-      firebase_bucket = var.firebase_bucket
+      vm_id                  = "VM-${count.index + 1}"
+      firebase_bucket        = var.firebase_bucket
+      firebase_credentials   = var.firebase_credentials_b64
     }))
   }
 

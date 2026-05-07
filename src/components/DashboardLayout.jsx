@@ -10,6 +10,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { PLATFORMS } from './PlatformLogos';
+import Logo from './Logo';
 
 export default function DashboardLayout() {
   const { user, signOut } = useAuth();
@@ -26,13 +27,7 @@ export default function DashboardLayout() {
       <aside className="w-60 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
         <div className="p-5 flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="12" r="6" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-            </svg>
-          </div>
+          <Logo size={40} />
           <div>
             <div className="font-bold text-gray-900 text-sm">SocialPlug</div>
             <div className="text-[10px] text-gray-400">by Illy Robotic Instruments</div>

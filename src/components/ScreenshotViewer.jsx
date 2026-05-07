@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
-import { X, Clock, Globe, RefreshCw, ExternalLink } from 'lucide-react';
+import { X, Clock, Globe, RefreshCw, ExternalLink, Monitor } from 'lucide-react';
 
-export default function ScreenshotViewer({ session, onClose }) {
+export default function ScreenshotViewer({ session, vm, onClose }) {
   const [liveSession, setLiveSession] = useState(session);
 
   // Real-time listener for live screenshot updates
@@ -55,8 +55,18 @@ export default function ScreenshotViewer({ session, onClose }) {
             </span>
           )}
           <span className="flex items-center gap-1 text-xs text-gray-400">
-            <RefreshCw size={12} /> Auto-refresh 60s
+            <RefreshCw size={12} /> Auto-screenshot every 60s
           </span>
+          {vm?.publicIp && vm?.vncPort && (
+            <a
+              href={`http://${vm.publicIp}:${vm.vncPort}/vnc.html`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs font-medium bg-primary-500 hover:bg-primary-600 text-white px-3 py-1 rounded-full transition"
+            >
+              <Monitor size={12} /> Live View
+            </a>
+          )}
           <button onClick={onClose} className="text-gray-400 hover:text-white transition">
             <X size={20} />
           </button>

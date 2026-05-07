@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
   onAuthStateChanged,
-  signInWithPopup,
-  signOut as firebaseSignOut,
 } from 'firebase/auth';
 import {
   doc,
@@ -16,7 +14,8 @@ import {
   addDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { auth, googleProvider, db } from '../firebase';
+import { auth, db } from '../firebase';
+import { signInWithGoogle, signOut as platformSignOut } from '../auth/platformAuth';
 
 const AuthContext = createContext(null);
 
@@ -95,8 +94,8 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
-  const signIn = () => signInWithPopup(auth, googleProvider);
-  const signOut = () => firebaseSignOut(auth);
+  const signIn = () => signInWithGoogle();
+  const signOut = () => platformSignOut();
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>

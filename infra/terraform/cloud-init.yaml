@@ -1,11 +1,10 @@
 #cloud-config
 # ══════════════════════════════════════════════════════════════════════════════
-# SocialPlug VM Agent — Cloud-Init (runs on first boot)
+# SocialPlug VM Agent v2 — Cloud-Init (runs on first boot)
 # by Illy Robotic Instruments
 #
-# This script is injected into each VM via Terraform user_data.
-# It installs all dependencies, sets up the agent, and starts the systemd
-# service — fully automated, no SSH required.
+# Installs a REAL Chrome / Chromium browser on a virtual display (Xvfb).
+# Tabs managed via Chrome DevTools Protocol. Optional noVNC for live access.
 # ══════════════════════════════════════════════════════════════════════════════
 
 package_update: true
@@ -16,6 +15,14 @@ packages:
   - python3-pip
   - python3-venv
   - git
+  - xvfb
+  - x11vnc
+  - novnc
+  - websockify
+  - xdotool
+  - chromium-browser
+  - fonts-liberation
+  - fonts-noto-color-emoji
   - libnss3
   - libatk1.0-0
   - libatk-bridge2.0-0
@@ -30,14 +37,16 @@ packages:
   - libcairo2
   - libasound2
   - libxshmfence1
-  - fonts-liberation
   - xdg-utils
+  - wget
+  - curl
+  - ca-certificates
 
 write_files:
   - path: /etc/systemd/system/socialplug-agent.service
     content: |
       [Unit]
-      Description=SocialPlug VM Agent — by Illy Robotic Instruments
+      Description=SocialPlug VM Agent v2 — by Illy Robotic Instruments
       After=network-online.target
       Wants=network-online.target
 
@@ -45,16 +54,31 @@ write_files:
       Type=simple
       User=ubuntu
       WorkingDirectory=/home/ubuntu/socialplug-agent
-      ExecStart=/home/ubuntu/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --bucket ${firebase_bucket}
+      ExecStart=/home/ubuntu/socialplug-agent/venv/bin/python agent.py --vm-id ${vm_id} --vnc
       Restart=always
       RestartSec=10
-      Environment=DISPLAY=:0
 
       [Install]
       WantedBy=multi-user.target
 
+  - path: /home/ubuntu/socialplug-agent/firebase-credentials.json.b64
+    owner: ubuntu:ubuntu
+    permissions: '0600'
+    encoding: text/plain
+    content: |
+      ${firebase_credentials}
+
 runcmd:
-  # Clone the repo to get the agent code
+  # Decode Firebase credentials from base64
+  - |
+    sudo -u ubuntu bash -c '
+      mkdir -p /home/ubuntu/socialplug-agent
+      base64 -d /home/ubuntu/socialplug-agent/firebase-credentials.json.b64 \
+        > /home/ubuntu/socialplug-agent/firebase-credentials.json
+      chmod 600 /home/ubuntu/socialplug-agent/firebase-credentials.json
+      rm -f /home/ubuntu/socialplug-agent/firebase-credentials.json.b64
+    '
+
   - |
     sudo -u ubuntu bash -c '
       set -e
@@ -74,10 +98,6 @@ runcmd:
       source venv/bin/activate
       pip install --upgrade pip
       pip install -r requirements.txt
-
-      # Pre-install Playwright Chromium
-      python -m playwright install chromium
-      python -m playwright install-deps chromium
     '
 
   # Enable and start the agent service
@@ -89,4 +109,4 @@ runcmd:
   - |
     echo '*/10 * * * * dd if=/dev/urandom bs=512K count=20 of=/dev/null 2>/dev/null' | crontab -u ubuntu -
 
-final_message: "SocialPlug agent is running on ${vm_id}!"
+final_message: "SocialPlug agent v2 (real Chrome) is running on ${vm_id}!"
