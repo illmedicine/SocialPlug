@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+vm-agent/venv/
+vm-agent/firebase-credentials.json
+vm-agent/__pycache__/

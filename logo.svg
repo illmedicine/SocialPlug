@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SocialPlug">
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="55%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="55%" r="55%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="plug" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield -->
+  <path d="M256 24 L468 96 V250 C468 360 388 446 256 488 C124 446 44 360 44 250 V96 Z"
+        fill="url(#shield)" stroke="url(#rim)" stroke-width="10"/>
+
+  <!-- Inner glow -->
+  <ellipse cx="256" cy="270" rx="170" ry="180" fill="url(#glow)"/>
+
+  <!-- Circuit traces -->
+  <g stroke="#38bdf8" stroke-width="2" fill="none" opacity=".55">
+    <path d="M120 200 H180 L200 220 H260"/>
+    <path d="M392 200 H332 L312 220 H260"/>
+    <path d="M120 320 H180 L200 300 H260"/>
+    <path d="M392 320 H332 L312 300 H260"/>
+    <circle cx="120" cy="200" r="3" fill="#38bdf8"/>
+    <circle cx="392" cy="200" r="3" fill="#38bdf8"/>
+    <circle cx="120" cy="320" r="3" fill="#38bdf8"/>
+    <circle cx="392" cy="320" r="3" fill="#38bdf8"/>
+  </g>
+
+  <!-- Plug body -->
+  <g>
+    <rect x="226" y="190" width="60" height="100" rx="14" fill="url(#plug)" stroke="#0ea5e9" stroke-width="3"/>
+    <!-- Prongs -->
+    <rect x="236" y="160" width="10" height="34" rx="3" fill="#e2e8f0"/>
+    <rect x="266" y="160" width="10" height="34" rx="3" fill="#e2e8f0"/>
+    <!-- Person silhouette on plug face -->
+    <circle cx="256" cy="230" r="10" fill="#0f172a"/>
+    <path d="M236 268 C236 252 246 244 256 244 C266 244 276 252 276 268 Z" fill="#0f172a"/>
+    <!-- Cable -->
+    <path d="M256 290 C256 320 230 340 256 380" stroke="#0ea5e9" stroke-width="6" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Social bubbles -->
+  <g font-family="Inter, Arial, sans-serif" font-weight="700" font-size="16" text-anchor="middle">
+    <circle cx="150" cy="240" r="16" fill="#3b82f6"/><text x="150" y="246" fill="#fff">f</text>
+    <circle cx="362" cy="240" r="16" fill="#ef4444"/><text x="362" y="246" fill="#fff">▶</text>
+    <circle cx="150" cy="290" r="16" fill="#10b981"/><text x="150" y="296" fill="#fff">♪</text>
+    <circle cx="362" cy="290" r="16" fill="#f59e0b"/><text x="362" y="296" fill="#fff">★</text>
+    <circle cx="180" cy="350" r="16" fill="#ec4899"/><text x="180" y="356" fill="#fff">©</text>
+    <circle cx="332" cy="350" r="16" fill="#0ea5e9"/><text x="332" y="356" fill="#fff">in</text>
+  </g>
+
+  <!-- Wordmark -->
+  <g font-family="Inter, Arial, sans-serif" text-anchor="middle">
+    <text x="256" y="430" font-size="42" font-weight="800" fill="#e0f2fe" letter-spacing="1">SocialPlug</text>
+    <text x="256" y="456" font-size="14" font-weight="500" fill="#7dd3fc" letter-spacing="2">by Illy Robotic Instruments</text>
+  </g>
+</svg>
