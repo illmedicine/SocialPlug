@@ -9,8 +9,8 @@ export default function LoginPage() {
       <div className="text-center">
         {/* Logo */}
         <div className="mb-8">
-          <div className="inline-flex items-center justify-center w-28 h-28 mb-4 drop-shadow-xl">
-            <Logo size={112} />
+          <div className="flex items-center justify-center mb-4">
+            <Logo size={240} className="drop-shadow-2xl" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900">SocialPlug</h1>
           <p className="text-gray-500 mt-1">by Illy Robotic Instruments</p>

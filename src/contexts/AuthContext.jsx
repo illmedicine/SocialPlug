@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { signInWithGoogle, signOut as platformSignOut } from '../auth/platformAuth';
+import { signInWithGoogle, signOut as platformSignOut, completeRedirectSignIn } from '../auth/platformAuth';
 
 const AuthContext = createContext(null);
 
@@ -61,6 +61,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Resolve any pending Google redirect before subscribing to auth state.
+    completeRedirectSignIn();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);

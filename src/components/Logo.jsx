@@ -1,10 +1,11 @@
 /**
  * Centralized SocialPlug logo component.
  * Prefers raster /logo.png if present, falls back to SVG.
+ * Renders with a transparent background — no card/box around it.
  */
 import { useState } from 'react';
 
-export default function Logo({ size = 40, className = '', rounded = true }) {
+export default function Logo({ size = 40, className = '', rounded = false }) {
   const [src, setSrc] = useState(`${import.meta.env.BASE_URL}logo.png`);
   return (
     <img
@@ -14,7 +15,11 @@ export default function Logo({ size = 40, className = '', rounded = true }) {
       width={size}
       height={size}
       className={`${rounded ? 'rounded-xl' : ''} ${className}`}
-      style={{ objectFit: 'contain' }}
+      style={{
+        objectFit: 'contain',
+        background: 'transparent',
+        mixBlendMode: 'multiply', // blends any near-white halo into light backgrounds
+      }}
     />
   );
 }
