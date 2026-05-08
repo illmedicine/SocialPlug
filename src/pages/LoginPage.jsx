@@ -5,18 +5,18 @@ export default function LoginPage() {
   const { signIn } = useAuth();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         {/* Logo */}
         <div className="mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Logo size={240} className="drop-shadow-2xl" />
+            <Logo size={280} className="drop-shadow-2xl" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900">SocialPlug</h1>
           <p className="text-gray-500 mt-1">by Illy Robotic Instruments</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-auto">
+        <div className="p-8 max-w-sm mx-auto">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Welcome Back</h2>
           <p className="text-gray-500 text-sm mb-6">
             Sign in to manage your cloud VM fleet

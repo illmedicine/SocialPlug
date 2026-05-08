@@ -54,26 +54,12 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, credential);
   }
-  // Web: try popup first; if it's blocked by COOP / popup blocker /
-  // unsupported-environment, fall back to a full-page redirect.
-  try {
-    return await signInWithPopup(auth, googleProvider);
-  } catch (err) {
-    const code = err?.code || '';
-    const popupBroken =
-      code === 'auth/popup-blocked' ||
-      code === 'auth/popup-closed-by-user' ||
-      code === 'auth/cancelled-popup-request' ||
-      code === 'auth/operation-not-supported-in-this-environment' ||
-      code === 'auth/internal-error' ||
-      /Cross-Origin-Opener-Policy|window\.closed|popup/i.test(err?.message || '');
-    if (popupBroken) {
-      console.warn('[platformAuth] popup sign-in failed, falling back to redirect', err);
-      await signInWithRedirect(auth, googleProvider);
-      return null; // page will navigate; result handled by completeRedirectSignIn()
-    }
-    throw err;
-  }
+  // Web: use full-page redirect. signInWithPopup is unreliable on GitHub
+  // Pages because the cross-origin Firebase auth handler iframe is blocked
+  // by Cross-Origin-Opener-Policy from closing/messaging back to the opener,
+  // so the popup completes Google sign-in but the SDK never resolves.
+  await signInWithRedirect(auth, googleProvider);
+  return null; // page navigates; AuthContext picks up the result on return
 }
 
 /** Call once on app boot to finish a redirect-based sign-in (no-op otherwise). */
