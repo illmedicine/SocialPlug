@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — SocialPlug</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <meta name="theme-color" content="#1e3a8a" />
+  <meta name="description" content="SocialPlug Privacy Policy by Illy Robotic Instruments" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #1f2937;
+      line-height: 1.65;
+    }
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #fff;
+      padding: 48px 24px 64px;
+      text-align: center;
+    }
+    header img { width: 96px; height: 96px; display: block; margin: 0 auto 16px; }
+    header h1 { margin: 0; font-size: 2.25rem; font-weight: 800; letter-spacing: -0.02em; }
+    header p { margin: 8px 0 0; opacity: 0.85; font-size: 0.95rem; }
+    main {
+      max-width: 760px;
+      margin: -32px auto 0;
+      padding: 32px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px -10px rgba(15, 23, 42, 0.15);
+      position: relative;
+    }
+    h2 {
+      color: #0f172a;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 32px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    h2:first-of-type { margin-top: 0; }
+    h3 { color: #1e3a8a; font-size: 1.05rem; margin-top: 24px; margin-bottom: 8px; }
+    p, li { font-size: 0.95rem; color: #374151; }
+    ul { padding-left: 1.25rem; }
+    a { color: #1e3a8a; }
+    code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+    }
+    .meta {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: #f9fafb;
+      border-left: 3px solid #1e3a8a;
+      border-radius: 4px;
+    }
+    footer {
+      text-align: center;
+      padding: 32px 24px 48px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    @media (max-width: 600px) {
+      header { padding: 32px 16px 48px; }
+      header h1 { font-size: 1.6rem; }
+      main { margin: -24px 12px 0; padding: 24px 20px; border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.svg" alt="SocialPlug" />
+    <h1>Privacy Policy</h1>
+    <p>SocialPlug · by Illy Robotic Instruments</p>
+  </header>
+
+  <main>
+    <div class="meta">
+      <strong>Effective date:</strong> May 11, 2026<br />
+      <strong>Application:</strong> SocialPlug (web at <a href="https://illmedicine.github.io/SocialPlug/">illmedicine.github.io/SocialPlug</a> and the Android app, package <code>com.illyroboticinstruments.socialplug</code>)<br />
+      <strong>Operator:</strong> Illy Robotic Instruments ("we", "us", "our")
+    </div>
+
+    <h2>1. Overview</h2>
+    <p>
+      SocialPlug is a cloud virtual-machine management and social-automation tool. This Privacy
+      Policy explains what information we collect, how we use it, and the choices you have. We
+      designed SocialPlug to keep your data inside infrastructure you control (Firebase project
+      and cloud VMs that you provision) — we do not operate a separate analytics or advertising
+      platform.
+    </p>
+
+    <h2>2. Information We Collect</h2>
+
+    <h3>2.1 Account information (from Google Sign-In)</h3>
+    <p>
+      When you sign in with Google, we receive the basic profile information you authorize
+      Google to share: your Google account <strong>display name</strong>, <strong>email
+      address</strong>, <strong>profile photo URL</strong>, and a unique account
+      identifier (<code>uid</code>). We do <em>not</em> receive your Google password.
+    </p>
+
+    <h3>2.2 Application data you create</h3>
+    <ul>
+      <li>Virtual-machine configuration (name, specs, provider, agent key, status).</li>
+      <li>Workflow definitions, blocks, and platform credentials you choose to store.</li>
+      <li>User preferences (screenshot interval, max tabs per VM, theme).</li>
+      <li>Browser screenshots captured by VM agents you run, plus session metadata.</li>
+    </ul>
+
+    <h3>2.3 Technical / operational data</h3>
+    <ul>
+      <li>VM heartbeat data (timestamp, public IP, agent version).</li>
+      <li>Cloud Function invocation metadata (timestamps, error codes).</li>
+      <li>Standard server logs from Firebase Hosting / GitHub Pages (IP address, user agent,
+        request URL) — retained per the respective providers' policies.</li>
+    </ul>
+
+    <p>
+      We do <strong>not</strong> collect: contacts, SMS, call logs, microphone audio, camera
+      images outside of VM screenshots that you initiate, precise location, or biometrics.
+      The Android app does not include any advertising or third-party analytics SDKs.
+    </p>
+
+    <h2>3. How We Use Information</h2>
+    <ul>
+      <li>To authenticate you and associate data with your account.</li>
+      <li>To render your dashboard, VM list, workflows, and screenshots.</li>
+      <li>To execute the VM lifecycle actions you trigger (start, stop, restart, delete).</li>
+      <li>To diagnose errors and improve reliability.</li>
+    </ul>
+    <p>We do not sell personal information. We do not share personal information with advertisers.</p>
+
+    <h2>4. Where Data Is Stored</h2>
+    <ul>
+      <li><strong>Authentication, Firestore database, Storage, Cloud Functions:</strong>
+        Google Firebase, project <code>livepay-petition</code>. Same backend whether you use
+        the web app or the Android app.</li>
+      <li><strong>Virtual machines:</strong> infrastructure you provision in Microsoft Azure
+        and/or Oracle Cloud, under your tenant credentials. Screenshots captured on those VMs
+        are uploaded to your Firestore.</li>
+      <li><strong>Static web hosting:</strong> GitHub Pages.</li>
+    </ul>
+    <p>
+      These third parties process data on our and your behalf and have their own privacy policies:
+      <a href="https://firebase.google.com/support/privacy">Firebase</a>,
+      <a href="https://policies.google.com/privacy">Google</a>,
+      <a href="https://learn.microsoft.com/legal/general-privacy-statement">Microsoft Azure</a>,
+      <a href="https://www.oracle.com/legal/privacy/">Oracle</a>,
+      <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a>.
+    </p>
+
+    <h2>5. Permissions Used by the Android App</h2>
+    <ul>
+      <li><strong>Internet</strong> — required to talk to Firebase and your VMs.</li>
+      <li><strong>Network state</strong> — to detect offline conditions.</li>
+      <li><strong>Sign in with Google</strong> — to authenticate you using your existing Google
+        account via the standard Google Sign-In flow.</li>
+    </ul>
+    <p>The app requests no other sensitive runtime permissions.</p>
+
+    <h2>6. Data Retention &amp; Deletion</h2>
+    <p>
+      Your data is retained as long as your account exists. You can delete your account and
+      associated data at any time from the in-app <strong>Settings</strong> page, or by emailing
+      us (see Section&nbsp;10). Deletion removes your user document, VM documents, workflows,
+      screenshots, and revokes your Google Sign-In session. Backups in Firebase may persist
+      for up to 30 days before being purged.
+    </p>
+    <p>
+      To request deletion without installing the app, email
+      <a href="mailto:privacy@illyroboticinstruments.com">privacy@illyroboticinstruments.com</a>
+      from the Google account you used to sign in. We will confirm deletion within 30 days.
+    </p>
+
+    <h2>7. Security</h2>
+    <p>
+      All traffic between SocialPlug and Firebase uses HTTPS. Firestore is protected by security
+      rules that allow each user to access only documents associated with their own
+      <code>uid</code>. VM agent credentials are stored encrypted at rest by Firebase. We follow
+      industry best practices but no system is perfectly secure; please use a strong Google
+      account password and enable two-factor authentication on your Google account.
+    </p>
+
+    <h2>8. Children</h2>
+    <p>
+      SocialPlug is not directed to children under 13 (or the equivalent minimum age in your
+      jurisdiction). We do not knowingly collect personal information from children.
+    </p>
+
+    <h2>9. Your Rights (GDPR / CCPA)</h2>
+    <p>
+      Depending on your jurisdiction, you may have the right to access, correct, export, or
+      delete personal information we hold about you, and to object to or restrict certain
+      processing. Contact us at the address in Section&nbsp;10 to exercise these rights.
+    </p>
+
+    <h2>10. Contact</h2>
+    <p>
+      Questions or requests regarding this policy:<br />
+      <strong>Illy Robotic Instruments</strong><br />
+      Email: <a href="mailto:privacy@illyroboticinstruments.com">privacy@illyroboticinstruments.com</a>
+    </p>
+
+    <h2>11. Changes to This Policy</h2>
+    <p>
+      We may update this Privacy Policy from time to time. Material changes will be announced
+      in-app and the "Effective date" above will be updated. Continued use of SocialPlug after
+      changes take effect constitutes acceptance of the revised policy.
+    </p>
+  </main>
+
+  <footer>
+    &copy; 2026 Illy Robotic Instruments · <a href="./">Back to SocialPlug</a>
+  </footer>
+</body>
+</html>

@@ -13,7 +13,9 @@
     "android:sync": "npm run build:android && cap sync android",
     "android:open": "cap open android",
     "android:run": "npm run android:sync && cap run android",
-    "android:icons": "capacitor-assets generate --android --assetPath assets"
+    "android:icons": "capacitor-assets generate --android --assetPath assets",
+    "android:aab": "npm run android:sync && cd android && gradlew.bat bundleRelease --no-daemon",
+    "android:apk": "npm run android:sync && cd android && gradlew.bat assembleRelease --no-daemon"
   },
   "dependencies": {
     "react": "^18.3.1",

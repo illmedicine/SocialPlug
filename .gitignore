@@ -6,3 +6,19 @@ dist/
 vm-agent/venv/
 vm-agent/firebase-credentials.json
 vm-agent/__pycache__/
+
+# Android / Capacitor build artifacts
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/
+android/local.properties
+android/**/*.iml
+
+# Keystores & signing secrets — NEVER commit
+android/keystore/*.jks
+android/keystore/*.keystore
+android/keystore/keystore.properties
+android/keystore/KEYSTORE_CREDENTIALS.txt
+android/app/google-services.json
