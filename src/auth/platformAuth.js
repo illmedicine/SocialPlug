@@ -54,12 +54,7 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, credential);
   }
-  // Web: use full-page redirect. signInWithPopup is unreliable on GitHub
-  // Pages because the cross-origin Firebase auth handler iframe is blocked
-  // by Cross-Origin-Opener-Policy from closing/messaging back to the opener,
-  // so the popup completes Google sign-in but the SDK never resolves.
-  await signInWithRedirect(auth, googleProvider);
-  return null; // page navigates; AuthContext picks up the result on return
+  return signInWithPopup(auth, googleProvider);
 }
 
 /** Call once on app boot to finish a redirect-based sign-in (no-op otherwise). */
