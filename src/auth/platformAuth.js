@@ -54,7 +54,9 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, credential);
   }
-  return signInWithPopup(auth, googleProvider);
+  // Popup is blocked by GitHub Pages' Cross-Origin-Opener-Policy headers.
+  // Redirect works now that illmedicine.github.io is an authorized domain.
+  await signInWithRedirect(auth, googleProvider);
 }
 
 /** Call once on app boot to finish a redirect-based sign-in (no-op otherwise). */
