@@ -54,15 +54,10 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, credential);
   }
-  // Try popup first; COOP warnings on GitHub Pages are non-fatal and popup
-  // often still resolves. If it genuinely fails, fall back to manual
-  // credential extraction via the popup window.
-  try {
-    return await signInWithPopup(auth, googleProvider);
-  } catch (err) {
-    console.warn('[platformAuth] popup sign-in failed, falling back to redirect', err);
-    await signInWithRedirect(auth, googleProvider);
-  }
+  // GitHub Pages sets Cross-Origin-Opener-Policy: same-origin, which breaks
+  // signInWithPopup (the SDK can't poll window.closed on the popup). Use
+  // redirect flow instead — it works reliably regardless of COOP headers.
+  await signInWithRedirect(auth, googleProvider);
 }
 
 /** Call once on app boot to finish a redirect-based sign-in (no-op otherwise). */
