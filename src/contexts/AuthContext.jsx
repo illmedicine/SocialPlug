@@ -61,9 +61,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Resolve any pending Google redirect before subscribing to auth state.
-    completeRedirectSignIn();
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribe = () => {};
+
+    // Resolve any pending Google redirect BEFORE subscribing to auth state.
+    // Without awaiting this, onAuthStateChanged fires with null before the
+    // redirect credential is processed, causing a premature redirect to /login.
+    completeRedirectSignIn().then(() => {
+      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
         const profileRef = doc(db, 'users', firebaseUser.uid);
@@ -91,9 +95,10 @@ export function AuthProvider({ children }) {
         setUser(null);
         setProfile(null);
       }
-      setLoading(false);
+        setLoading(false);
+      });
     });
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   const signIn = () => signInWithGoogle();
