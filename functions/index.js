@@ -70,7 +70,7 @@ function azureVMName(vmData) {
  * The agent polls this field every 5 s and executes it.
  * Supported commands: "update" (pull code + restart), "restart"
  */
-exports.sendAgentCommand = onCall({ cors: CORS_ORIGINS }, async (request) => {
+exports.sendAgentCommand = onCall({ cors: CORS_ORIGINS, invoker: "public" }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
 
   const { vmId, command } = request.data;
