@@ -1,8 +1,12 @@
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Logo from '../components/Logo';
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { user, loading, signIn } = useAuth();
+
+  if (loading) return null;
+  if (user) return <Navigate to="/" replace />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
