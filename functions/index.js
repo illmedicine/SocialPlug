@@ -17,6 +17,12 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 const db = admin.firestore();
 
+const CORS_ORIGINS = [
+  "https://illmedicine.github.io",
+  "http://localhost:5173",
+  "http://localhost:4173",
+];
+
 // ── Azure secrets (set once, stored encrypted by Firebase) ──────────────────
 const AZURE_TENANT_ID = defineSecret("AZURE_TENANT_ID");
 const AZURE_CLIENT_ID = defineSecret("AZURE_CLIENT_ID");
@@ -64,7 +70,7 @@ function azureVMName(vmData) {
  * The agent polls this field every 5 s and executes it.
  * Supported commands: "update" (pull code + restart), "restart"
  */
-exports.sendAgentCommand = onCall(async (request) => {
+exports.sendAgentCommand = onCall({ cors: CORS_ORIGINS }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
 
   const { vmId, command } = request.data;
@@ -92,7 +98,7 @@ exports.sendAgentCommand = onCall(async (request) => {
  * startVM — Power on a deallocated Azure VM.
  */
 exports.startVM = onCall(
-  { secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
+  { cors: CORS_ORIGINS, secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
     const { vmId } = request.data;
@@ -121,7 +127,7 @@ exports.startVM = onCall(
  * stopVM — Deallocate an Azure VM (no charges while stopped).
  */
 exports.stopVM = onCall(
-  { secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
+  { cors: CORS_ORIGINS, secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
     const { vmId } = request.data;
@@ -149,7 +155,7 @@ exports.stopVM = onCall(
  * restartVM — Reboot an Azure VM.
  */
 exports.restartVM = onCall(
-  { secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
+  { cors: CORS_ORIGINS, secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
     const { vmId } = request.data;
@@ -178,7 +184,7 @@ exports.restartVM = onCall(
  * ⚠ This is destructive! The VM, its disk, NIC, and public IP are deleted.
  */
 exports.deleteVM = onCall(
-  { secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
+  { cors: CORS_ORIGINS, secrets: [AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_SUBSCRIPTION_ID] },
   async (request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first");
     const { vmId, confirm } = request.data;

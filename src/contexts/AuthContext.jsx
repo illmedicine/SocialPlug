@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { signInWithGoogle, signOut as platformSignOut, completeRedirectSignIn } from '../auth/platformAuth';
+import { signInWithGoogle, signOut as platformSignOut } from '../auth/platformAuth';
 
 const AuthContext = createContext(null);
 
@@ -61,13 +61,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribe = () => {};
-
-    // Resolve any pending Google redirect BEFORE subscribing to auth state.
-    // Without awaiting this, onAuthStateChanged fires with null before the
-    // redirect credential is processed, causing a premature redirect to /login.
-    completeRedirectSignIn().then(() => {
-      unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
         const profileRef = doc(db, 'users', firebaseUser.uid);
@@ -89,16 +83,14 @@ export function AuthProvider({ children }) {
           await setDoc(profileRef, newProfile);
           setProfile(newProfile);
         }
-        // Auto-seed 4 VMs on first login
         await seedVMs(firebaseUser.uid);
       } else {
         setUser(null);
         setProfile(null);
       }
-        setLoading(false);
-      });
+      setLoading(false);
     });
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const signIn = () => signInWithGoogle();
