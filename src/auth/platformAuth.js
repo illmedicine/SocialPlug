@@ -54,10 +54,17 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credential(idToken);
     return signInWithCredential(auth, credential);
   }
-  // GitHub Pages sets Cross-Origin-Opener-Policy: same-origin, which breaks
-  // signInWithPopup (the SDK can't poll window.closed on the popup). Use
-  // redirect flow instead — it works reliably regardless of COOP headers.
-  await signInWithRedirect(auth, googleProvider);
+  // Try popup first — COOP warnings on GitHub Pages are usually non-fatal.
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch {
+    // Popup blocked or COOP failure — fall back to redirect.
+    // Navigate to the base path first so Firebase redirects back to a real
+    // index.html instead of /login (which 404s and mangles the auth params).
+    const base = import.meta.env.BASE_URL || '/';
+    window.history.replaceState(null, '', base);
+    await signInWithRedirect(auth, googleProvider);
+  }
 }
 
 /** Call once on app boot to finish a redirect-based sign-in (no-op otherwise). */
